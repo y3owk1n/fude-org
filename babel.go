@@ -5,7 +5,6 @@ import (
 	"maps"
 	"path"
 	"slices"
-	"strconv"
 	"strings"
 
 	"github.com/y3owk1n/fude/api"
@@ -139,7 +138,6 @@ func tangle() error {
 	text, _ := sdk.Text(0, n)
 	lines := strings.Split(text, "\n")
 	files := map[string][]string{}
-	blocks := 0
 	for i := 0; i < len(lines); i++ {
 		blk, ok := blockAt(lines, i)
 		if !ok || blk.Begin != i {
@@ -150,19 +148,20 @@ func tangle() error {
 				to = path.Join(path.Dir(here()), to)
 			}
 			files[to] = append(files[to], blk.Text)
-			blocks++
 		}
 		i = blk.End
 	}
 	if len(files) == 0 {
 		return errors.New("no source block has :tangle")
 	}
+	var names []string
 	for _, to := range slices.Sorted(maps.Keys(files)) {
 		if err := sdk.WriteFile(to, strings.Join(files[to], "\n")+"\n"); err != nil {
 			return err
 		}
+		names = append(names, path.Base(to))
 	}
-	return sdk.Message("tangled " + strconv.Itoa(blocks) + " blocks into " + strconv.Itoa(len(files)) + " files")
+	return sdk.Message("tangled " + strings.Join(names, ", "))
 }
 
 // filetypes are the filetypes of the languages a block may name that differ
