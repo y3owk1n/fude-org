@@ -271,6 +271,9 @@ func init() {
 		return 0
 	})
 	key("columns", "<Leader>oC", "shows the section's headings, or the file's, with the columns of its #+COLUMNS: line", func(c sdk.Call) { columnView(c.Cursor) })
+	sdk.Define("pandoc", "pandoc", "the program export runs, which the plugin's programs must hold")
+	sdk.Command("OrgExport", "writes the buffer beside its file in a format with pandoc: html, md, pdf, docx, odt, latex, epub or txt", func(c sdk.Call) { report(export(c.Args)) })
+	sdk.Key("export", "<Leader>oE", "asks for a format and writes the buffer beside its file in it with pandoc", func(sdk.Call) { pickExport() })
 	sdk.Object("ah", "a heading and its subtree", func(start, _ int) (int, int, bool) { return section(start, true) })
 	sdk.Object("ih", "a heading's subtree, without the heading", func(start, _ int) (int, int, bool) { return section(start, false) })
 

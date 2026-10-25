@@ -24,7 +24,7 @@ Add this table to fude's `config.toml`:
 [[plugin]]
 path = "/path/to/fude-org/fude-org.wasm"
 capabilities = ["buffer.read", "buffer.write", "ui", "fs.read", "fs.write", "process", "keys", "grammar"]
-programs = ["open"]
+programs = ["open", "pandoc"]
 paths = ["~/org"]
 ```
 
@@ -36,7 +36,8 @@ paths = ["~/org"]
 - `paths` is the folder of your org files, which the agenda reads and
   capture writes to.
 - `process` and `programs` let a web link open with `open`, or with
-  `xdg-open` on Linux, set as the `opener` option too.
+  `xdg-open` on Linux, set as the `opener` option too, and export run
+  pandoc. Leave out what you do not use.
 - `keys` lets `<Tab>` and `<S-Tab>` run fude's fold cycling. A guest of a
   shared session may not use a plugin granted `keys`.
 
@@ -151,6 +152,7 @@ Anywhere:
 | Keys | Command | What it does |
 |---|---|---|
 | `<Leader>oa` | `:OrgAgenda [VIEW]` | asks for an agenda view, or shows the one named |
+| `<Leader>oE` | `:OrgExport [FORMAT]` | asks for a format, or takes the one named, and writes the buffer beside its file in it with pandoc: `html`, the default, `md`, `pdf`, `docx`, `odt`, `latex`, `epub` or `txt` |
 | `<Leader>oc` | `:OrgCapture [text]` | asks for a capture template and the text, or captures the text typed after it with the first template |
 
 An agenda view is `week` and a number of days, 7 by default, `todo` and
@@ -202,11 +204,12 @@ Set them in the table's `options`, such as
 | `opener` | `open` | the program that opens a web link, which `programs` must hold |
 | `directory` | `~/org` | the folder the agenda reads, which `paths` must hold |
 | `views` | none | the agenda's own views, a line each: a key and a view |
+| `pandoc` | `pandoc` | the program export runs, which `programs` must hold |
 | `templates` | `t inbox.org * TODO %?` | the capture templates, a line each |
 
 ## Not yet
 
-Export, code blocks, citations and attachments.
+Code blocks, citations and attachments.
 
 ## Check
 
