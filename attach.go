@@ -10,9 +10,9 @@ import (
 	"github.com/y3owk1n/fude/sdk"
 )
 
-// attachDir returns the folder of the attachments of the heading whose ID
-// is id, data/ and the ID's first two characters and the rest beside the
-// buffer's file, as org keeps them.
+// attachDir returns the attachment folder of the heading whose ID is id,
+// as org keeps it: data/ beside the buffer's file, then the ID's first two
+// characters, then the rest.
 func attachDir(id string) string {
 	return path.Join(path.Dir(sdk.Current().Path), "data", id[:min(2, len(id))], id[min(2, len(id)):])
 }

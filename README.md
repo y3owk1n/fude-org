@@ -132,14 +132,14 @@ none, and tags it `ATTACH`. Org and text attachments open in fude, and
 any other with the opener. `[[attachment:name]]` opens one of the
 attachments of the heading it is under.
 
-A citation is org's, `[cite:@key]` or `[cite/style:@a;@b]`. Its entries
-come from the BibTeX files of the file's `#+bibliography:` lines, beside
-it, and of the `bibliography` option. Export renders citations with
+Citations use org's syntax, `[cite:@key]` or `[cite/style:@a;@b]`. Their
+entries come from the BibTeX files that the file's `#+bibliography:` lines
+name, beside it, and from the `bibliography` option. Export renders citations with
 pandoc's `--citeproc`.
 
-A source block runs with the program the `languages` option gives its
-language, its text the program's input. What it prints replaces the
-block's `#+RESULTS:`, a line of `: ` each. Tangling writes the blocks of
+A source block runs with the program that the `languages` option gives
+its language, with the block's text as the program's input. What it
+prints replaces the block's `#+RESULTS:`, one `: ` line per printed line. Tangling writes the blocks of
 one file in their order, beside the org file.
 
 A table's column is to the right when more than half its cells are
@@ -178,10 +178,13 @@ Anywhere:
 | `<Leader>oE` | `:OrgExport [FORMAT]` | asks for a format, or takes the one named, and writes the buffer beside its file in it with pandoc: `html`, the default, `md`, `pdf`, `docx`, `odt`, `latex`, `epub` or `txt` |
 | `<Leader>oc` | `:OrgCapture [text]` | asks for a capture template and the text, or captures the text typed after it with the first template |
 
-An agenda view is `week` and a number of days, 7 by default, `todo` and
-keywords to show only those, `tags` and a match, `search` and text, which
-lists each line of the org files that holds it, or a key of the `views`
-option. Each line of `views` is a key and a view:
+An agenda view is one of these:
+
+- `week` and a number of days, 7 by default
+- `todo`, with keywords to show only those
+- `tags` and a match
+- `search` and text, which lists each line of the org files that holds it
+- a key of the `views` option, each line of which is a key and a view
 
 ```toml
 options = { views = """

@@ -77,8 +77,8 @@ func program(lang string) (string, bool) {
 }
 
 // runBlock runs the source block under the cursor with its language's
-// program, its text the program's input, and puts what it prints under
-// #+RESULTS: after it, in place of the results it had.
+// program, with the block's text as input. What the program prints
+// replaces the results under the block.
 func runBlock(cursor int) error {
 	n, _ := sdk.Len()
 	text, _ := sdk.Text(0, n)
