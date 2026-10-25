@@ -5,6 +5,7 @@ package test
 import (
 	"testing"
 
+	"github.com/y3owk1n/fude/api"
 	"github.com/y3owk1n/fude/plugin"
 	"github.com/y3owk1n/fude/plugin/plugintest"
 )
@@ -22,6 +23,9 @@ type step struct {
 	at         int
 	want       string
 }
+
+// applied returns text with the edits res asks for made.
+func applied(text string, res api.Result) string { return plugintest.Apply(text, res) }
 
 // run runs each step and checks the text its edits leave.
 func run(t *testing.T, steps []step) {

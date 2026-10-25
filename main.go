@@ -143,16 +143,38 @@ func init() {
 		h, _ := owner(c.Cursor)
 		addHeading(c.Cursor, h, h.Level+1, "")
 	})
-	key("priority_up", "<S-Up>", "raises the heading's priority, none, C, B, A", func(c sdk.Call) {
-		if _, ok := heading(c.Cursor); ok {
+	key("shift_up", "<S-Up>", "moves the part of the timestamp under the cursor later, or raises the heading's priority, none, C, B, A", func(c sdk.Call) {
+		if _, ok := heading(c.Cursor); !shiftStamp(c.Cursor, max(c.Count, 1), false) && ok {
 			changeFront(c.Cursor, func(f *Front) { f.Head.Priority = stepPriority(f.Head.Priority, 1) })
 		}
 	})
-	key("priority_down", "<S-Down>", "lowers the heading's priority, A, B, C, none", func(c sdk.Call) {
-		if _, ok := heading(c.Cursor); ok {
+	key("shift_down", "<S-Down>", "moves the part of the timestamp under the cursor earlier, or lowers the heading's priority, A, B, C, none", func(c sdk.Call) {
+		if _, ok := heading(c.Cursor); !shiftStamp(c.Cursor, -max(c.Count, 1), false) && ok {
 			changeFront(c.Cursor, func(f *Front) { f.Head.Priority = stepPriority(f.Head.Priority, -1) })
 		}
 	})
+	key("shift_right", "<S-Right>", "moves the timestamp under the cursor a day later, or puts the next TODO keyword on the heading", func(c sdk.Call) {
+		if h, ok := heading(c.Cursor); !shiftStamp(c.Cursor, max(c.Count, 1), true) && ok {
+			t, d := bufferKeys()
+			edit(cycleTodo(h, t, d, false))
+		}
+	})
+	key("shift_left", "<S-Left>", "moves the timestamp under the cursor a day earlier, or puts the TODO keyword before on the heading", func(c sdk.Call) {
+		if h, ok := heading(c.Cursor); !shiftStamp(c.Cursor, -max(c.Count, 1), true) && ok {
+			t, d := bufferKeys()
+			edit(cycleTodo(h, t, d, true))
+		}
+	})
+	key("increment", "<C-a>", "moves the part of the timestamp under the cursor later, n of its unit", func(c sdk.Call) {
+		shiftStamp(c.Cursor, max(c.Count, 1), false)
+	})
+	key("decrement", "<C-x>", "moves the part of the timestamp under the cursor earlier, n of its unit", func(c sdk.Call) {
+		shiftStamp(c.Cursor, -max(c.Count, 1), false)
+	})
+	key("schedule", "<Leader>os", "asks when the section is scheduled, such as fri, +3d or 2026-11-02 10:00 +1w", func(c sdk.Call) { setDate(c.Cursor, 2) })
+	key("deadline", "<Leader>od", "asks when the section is due, such as fri, +3d or 2026-11-02", func(c sdk.Call) { setDate(c.Cursor, 1) })
+	key("timestamp", "<Leader>o.", "asks for a date and puts it at the cursor as a timestamp, today's for none", func(c sdk.Call) { insertStamp(c.Cursor, true) })
+	key("inactive_timestamp", "<Leader>o!", "puts an inactive timestamp, which the agenda leaves out, at the cursor", func(c sdk.Call) { insertStamp(c.Cursor, false) })
 	key("priority", "<Leader>o,", "asks for the section's priority, A, B, C or none", func(c sdk.Call) {
 		ask("priority (A, B, C or none)", "", func(text string) error {
 			p := strings.ToUpper(strings.TrimSpace(text))

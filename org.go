@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strconv"
@@ -308,4 +309,102 @@ func keyNames(words []string) []string {
 		out[i], _, _ = strings.Cut(w, "(")
 	}
 	return out
+}
+
+// weekdays are the names a date may be typed as, by their first three
+// letters.
+var weekdays = []string{"sun", "mon", "tue", "wed", "thu", "fri", "sat"}
+
+// parseDate reads a date typed as org reads one, from today: 2026-10-25,
+// +3d, -1w, today, tomorrow or a weekday, the nearest from today, each
+// with a time such as 10:00 or 10:00-11:00, a repeater such as +1w and a
+// warning such as -2d after it.
+func parseDate(text string, today time.Time) (Stamp, error) {
+	words := strings.Fields(strings.ToLower(text))
+	if len(words) == 0 {
+		return Stamp{}, errors.New("no date")
+	}
+	st := Stamp{Active: true}
+	switch w := words[0]; {
+	case w == "today" || w == ".":
+		st.Day = today
+	case w == "tomorrow":
+		st.Day = today.AddDate(0, 0, 1)
+	case w[0] == '+' || w[0] == '-':
+		if strings.Trim(w[1:], "0123456789") == "" {
+			w += "d"
+		}
+		n, unit, ok := interval(w)
+		if !ok {
+			return Stamp{}, fmt.Errorf("%s is no date", words[0])
+		}
+		if w[0] == '-' {
+			n = -n
+		}
+		st = Stamp{Active: true, Day: today}.add(n, unit)
+	case slices.Contains(weekdays, w[:min(3, len(w))]):
+		want := time.Weekday(slices.Index(weekdays, w[:3]))
+		st.Day = today.AddDate(0, 0, (int(want)-int(today.Weekday())+7)%7)
+	default:
+		day, err := time.Parse(time.DateOnly, w)
+		if err != nil {
+			return Stamp{}, fmt.Errorf("%s is no date", words[0])
+		}
+		st.Day = day
+	}
+	for _, w := range words[1:] {
+		switch {
+		case strings.Contains(w, ":"):
+			st.Time = w
+		case w[0] == '-':
+			st.Warn = w
+		case w[0] == '+' || w[0] == '.':
+			st.Repeat = w
+		default:
+			return Stamp{}, fmt.Errorf("%s is no time, repeater or warning", w)
+		}
+	}
+	return st, nil
+}
+
+// typed returns st as parseDate reads it back.
+func (st Stamp) typed() string {
+	parts := []string{st.Day.Format(time.DateOnly)}
+	for _, p := range []string{st.Time, st.Repeat, st.Warn} {
+		if p != "" {
+			parts = append(parts, p)
+		}
+	}
+	return strings.Join(parts, " ")
+}
+
+// stampAt returns the timestamp in line that holds col, and where it
+// starts and ends.
+func stampAt(line string, col int) (Stamp, int, int, bool) {
+	for i := 0; i < len(line); i++ {
+		if line[i] != '<' && line[i] != '[' {
+			continue
+		}
+		if st, n, ok := parseStamp(line[i:]); ok {
+			if col >= i && col < i+n {
+				return st, i, i + n, true
+			}
+			i += n - 1
+		}
+	}
+	return Stamp{}, 0, 0, false
+}
+
+// unitAt returns the unit of the part of the timestamp's text at rel, as
+// String writes it: y, m or d in its date, h in its time, and d elsewhere.
+func (st Stamp) unitAt(rel int) byte {
+	switch {
+	case rel <= 4:
+		return 'y'
+	case rel <= 7:
+		return 'm'
+	case st.Time != "" && rel > 15 && rel <= 15+len(st.Time):
+		return 'h'
+	}
+	return 'd'
 }

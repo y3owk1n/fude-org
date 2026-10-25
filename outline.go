@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/y3owk1n/fude/api"
 	"github.com/y3owk1n/fude/sdk"
@@ -314,5 +315,75 @@ func insertLine(at int, line string) {
 		Edits: []api.Edit{{Start: at, End: at, Text: "\n" + line}},
 		Jump:  &api.Jump{Pos: at + 1 + len(line)},
 		Keys:  "a",
+	})
+}
+
+// shiftStamp moves the timestamp under the cursor by n of the unit of the
+// part under it, or by n days with days, and keeps the cursor where it
+// was. It is false off a timestamp.
+func shiftStamp(cursor, n int, days bool) bool {
+	l, _ := sdk.LineOf(cursor)
+	start, text := lineAt(l)
+	st, from, to, ok := stampAt(text, cursor-start)
+	if !ok {
+		return false
+	}
+	unit := byte('d')
+	if !days {
+		unit = st.unitAt(cursor - start - from)
+	}
+	sdk.Do(api.Result{Edits: []api.Edit{{Start: start + from, End: start + to, Text: st.add(n, unit).String()}}, Jump: &api.Jump{Pos: cursor}})
+	return true
+}
+
+// today returns the local date, at midnight UTC as a Stamp's day is.
+func today() time.Time {
+	now := sdk.Now()
+	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+// setDate asks for the date of the section's planning keyword at i of
+// planWords, starting from the one it has, and sets it, or removes it for
+// none.
+func setDate(cursor, i int) {
+	h, ok := owner(cursor)
+	if !ok {
+		sdk.Do(api.Result{Error: "no heading here"})
+		return
+	}
+	f, _ := front(h)
+	query := ""
+	if st := *f.Plan.at(i); st != nil {
+		query = st.typed()
+	}
+	ask(strings.ToLower(strings.TrimSuffix(planWords[i], ":")), query, func(text string) error {
+		var st *Stamp
+		if strings.TrimSpace(text) != "" {
+			s, err := parseDate(text, today())
+			if err != nil {
+				return err
+			}
+			st = &s
+		}
+		changeFront(cursor, func(f *Front) { *f.Plan.at(i) = st })
+		return nil
+	})
+}
+
+// insertStamp asks for a date and puts it at the cursor as a timestamp,
+// today's for none.
+func insertStamp(cursor int, active bool) {
+	ask("timestamp", "", func(text string) error {
+		st := Stamp{Day: today()}
+		if strings.TrimSpace(text) != "" {
+			s, err := parseDate(text, today())
+			if err != nil {
+				return err
+			}
+			st = s
+		}
+		st.Active = active
+		edit(api.Edit{Start: cursor, End: cursor, Text: st.String()})
+		return nil
 	})
 }
