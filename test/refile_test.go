@@ -37,10 +37,23 @@ func TestRefile(t *testing.T) {
 	p, dir := notes(t, map[string]string{"work.org": "* Projects\n** Old\n* Later\n"})
 	p.Path, p.Filetype = filepath.Join(dir, "a.org"), "org"
 	text := "* A\n** a1\nbody\n* C\nc"
+	// The list opens at once with the buffer's headings, and fills in once
+	// the plugin reads the org files.
+	res := p.Key("<Leader>or", text, 4, 0)
+	if res.Pick == nil || !slices.Equal(res.Pick.Items, []string{"a.org", "a.org › A", "a.org › A › a1", "a.org › C"}) || len(res.Timers) == 0 {
+		t.Fatalf("<Leader>or opened %+v", res.Pick)
+	}
+	id := res.Pick.ID
+	for len(res.Timers) > 0 {
+		res = p.Callback(res.Timers[0].ID, text, nil)
+	}
+	if res.Pick == nil || !res.Pick.Update || res.Pick.ID != id || !slices.Contains(res.Pick.Items, "work.org › Projects") {
+		t.Fatalf("reading the org files sent %+v", res.Pick)
+	}
 	if got := applied(text, pick(t, p, "<Leader>or", text, 4, "a.org › C")); got != "* A\n* C\nc\n** a1\nbody" {
 		t.Errorf("refiling a1 under C left %q", got)
 	}
-	res := pick(t, p, "<Leader>or", text, 4, "work.org › Projects")
+	res = pick(t, p, "<Leader>or", text, 4, "work.org › Projects")
 	if got := applied(text, res); got != "* A\n* C\nc" {
 		t.Errorf("refiling a1 to work.org left %q", got)
 	}

@@ -6,6 +6,7 @@ import (
 	"maps"
 	"path"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/y3owk1n/fude/api"
@@ -45,34 +46,57 @@ func targets(p, text string) []Target {
 }
 
 // refile asks where to move the subtree of the section that holds cursor,
-// among the headings of the org files and the buffer, and moves it there.
+// among the headings of the buffer and the org files, and moves it there.
+// The list opens at once with the files read before, and fills in as the
+// plugin reads the org files again.
 func refile(cursor int) {
 	h, ok := owner(cursor)
 	if !ok {
 		sdk.Do(api.Result{Error: "no heading here"})
 		return
 	}
-	gather(func() {
-		n, _ := sdk.Len()
-		text, _ := sdk.Text(0, n)
-		// The buffer's own headings come first, as it has them now.
-		file := here()
-		all := targets(file, text)
-		for _, p := range slices.Sorted(maps.Keys(read)) {
-			if p != file {
-				all = append(all, read[p].heads...)
-			}
+	all := refileTargets()
+	id := sdk.Callback(func() bool {
+		picked := sdk.About("picked")
+		if picked == "" {
+			return true
 		}
-		items := make([]string, len(all))
-		for i, t := range all {
-			items[i] = t.String()
+		if i, err := strconv.Atoi(picked); err == nil && sdk.About("ok") == "true" && i >= 0 && i < len(all) {
+			report(moveTo(h, all[i]))
 		}
-		report(sdk.Pick("refile to", items, func(i int, ok bool) {
-			if ok {
-				report(moveTo(h, all[i]))
-			}
-		}))
+		return false
 	})
+	pick := api.Pick{ID: id, Prompt: "refile to", Items: names(all)}
+	report(sdk.Do(api.Result{Pick: &pick}))
+	gather(func() {
+		all = refileTargets()
+		pick.Items, pick.Update = names(all), true
+		report(sdk.Do(api.Result{Pick: &pick}))
+	})
+}
+
+// refileTargets returns where refile may move a subtree: the buffer's own
+// headings, as it has them now, then those of the org files read.
+func refileTargets() []Target {
+	n, _ := sdk.Len()
+	text, _ := sdk.Text(0, n)
+	file := here()
+	all := targets(file, text)
+	for _, p := range slices.Sorted(maps.Keys(read)) {
+		if p != file {
+			all = append(all, read[p].heads...)
+		}
+	}
+	return all
+}
+
+// names returns each of ts as refile lists it.
+func names(ts []Target) []string {
+	out := make([]string, len(ts))
+	for i, t := range ts {
+		out[i] = t.String()
+	}
+	return out
 }
 
 // moveTo moves h's subtree under t, at the end of t's subtree, its levels

@@ -45,6 +45,7 @@ var scan struct {
 	dirs, files []string
 	then        func()
 	shown       []*Entry
+	run         int // which gather runs, so an older one stops
 }
 
 // slice is how long one step of gathering the agenda runs, well within the
@@ -62,14 +63,19 @@ func agenda() { gather(func() { view() }) }
 // callback, and then runs then.
 func gather(then func()) {
 	dir, _ := sdk.Option("fude-org.directory")
+	scan.run++
+	run := scan.run
 	scan.dirs, scan.files, scan.then = []string{dir}, nil, then
-	report(sdk.After(0, step))
+	report(sdk.After(0, func() { step(run) }))
 }
 
 // step lists folders and reads files until its slice of time is up, then
 // asks for the next step, or runs what gather was given once all are
-// read.
-func step() {
+// read. A step of a gather that a newer one replaced does nothing.
+func step(run int) {
+	if run != scan.run {
+		return
+	}
 	until := sdk.Now().Add(slice)
 	for sdk.Now().Before(until) {
 		switch {
@@ -102,7 +108,7 @@ func step() {
 			return
 		}
 	}
-	sdk.After(0, step)
+	sdk.After(0, func() { step(run) })
 }
 
 // readFile reads the entries of the file at p, unless it has not changed

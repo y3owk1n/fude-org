@@ -164,7 +164,9 @@ heading with an `:ID:` is by its ID. After a file, `::*title`, `::#id`, a line n
 to go in it.
 
 Refile lists the headings of the buffer as it is and of the files the
-agenda reads. A subtree takes the level under the heading it goes to. A
+agenda reads. The plugin reads those files when an org file opens, so the
+list opens at once, and it fills in what changed since as it reads them
+again. A subtree takes the level under the heading it goes to. A
 subtree moved to another file goes through `fs.write`, which refuses a
 file open with changes not written. Archive keeps where the subtree came from
 in its drawer: `ARCHIVE_TIME`, `ARCHIVE_FILE`, `ARCHIVE_OLPATH`,
