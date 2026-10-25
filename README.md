@@ -13,8 +13,7 @@ oku sync && oku allow   # Go, TinyGo and binaryen, as fude pins them
 fude plugin build       # writes fude-org.wasm
 ```
 
-It needs fude's API after v0.3.0, so `go.mod` points at a fude checkout
-beside this one, `../fude`, until the next release.
+It needs fude v0.3.1 or later.
 
 ## Install
 
