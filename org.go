@@ -118,11 +118,7 @@ func (st Stamp) add(n int, unit byte) Stamp {
 		if st.Time == "" {
 			return st
 		}
-		t, err := time.Parse("15:04", st.Time[:min(5, len(st.Time))])
-		if err != nil {
-			return st
-		}
-		at := st.Day.Add(time.Duration(t.Hour())*time.Hour + time.Duration(t.Minute())*time.Minute + time.Duration(n)*time.Hour)
+		at := st.at().Add(time.Duration(n) * time.Hour)
 		st.Day = time.Date(at.Year(), at.Month(), at.Day(), 0, 0, 0, 0, time.UTC)
 		st.Time = at.Format("15:04") + st.Time[min(5, len(st.Time)):]
 	case 'd':
@@ -135,6 +131,15 @@ func (st Stamp) add(n int, unit byte) Stamp {
 		st.Day = st.Day.AddDate(n, 0, 0)
 	}
 	return st
+}
+
+// at returns the time st stands for, its day at its time.
+func (st Stamp) at() time.Time {
+	t, err := time.Parse("15:04", st.Time[:min(5, len(st.Time))])
+	if err != nil {
+		return st.Day
+	}
+	return st.Day.Add(time.Duration(t.Hour())*time.Hour + time.Duration(t.Minute())*time.Minute)
 }
 
 // interval reads an interval such as 2w, or the 1w of a repeater such as

@@ -18,15 +18,6 @@ var running *struct {
 	Started     time.Time
 }
 
-// at returns the time st stands for, its day at its time.
-func (st Stamp) at() time.Time {
-	t, err := time.Parse("15:04", st.Time[:min(5, len(st.Time))])
-	if err != nil {
-		return st.Day
-	}
-	return st.Day.Add(time.Duration(t.Hour())*time.Hour + time.Duration(t.Minute())*time.Minute)
-}
-
 // stampNow returns now as an inactive timestamp with its time.
 func stampNow() Stamp {
 	return Stamp{Day: today(), Time: sdk.Now().Format("15:04")}
