@@ -113,15 +113,29 @@ Anywhere:
 | Keys | Command | What it does |
 |---|---|---|
 | `<Leader>oa` | `:OrgAgenda` | shows what is overdue, due today, this week and later, then the TODOs with no date |
-| `<Leader>oc` | `:OrgCapture [text]` | adds a TODO to the inbox, the text typed after it or asked for |
+| `<Leader>oc` | `:OrgCapture [text]` | asks for a capture template and the text, or captures the text typed after it with the first template |
 
 In the agenda, `<CR>` opens the heading on the cursor's line, `t` puts the
 next TODO keyword on it in its file, and `r` gathers the agenda again.
 
+A capture template is a line of the `templates` option: a key, a file in
+the directory, with `::*heading` after it to go under that heading or not,
+and the text. In the text, `%?` stands for what you type, `%t` and `%T`
+for today's date and the time, `%u` and `%U` for them inactive, `%a` for a
+link to where the capture began, and `\n` for a new line. An entry under a
+heading takes the level below it.
+
+```toml
+options = { templates = """
+t inbox.org * TODO %?
+j journal.org::*Journal * %U %?\n%a
+""" }
+```
+
 ## Options
 
 Set them in the table's `options`, such as
-`options = { directory = "~/notes", inbox = "~/notes/inbox.org" }`, or with
+`options = { directory = "~/notes" }`, or with
 `:set fude-org.directory ~/notes`.
 
 | Option | Default | What it is |
@@ -130,14 +144,13 @@ Set them in the table's `options`, such as
 | `log_done` | `true` | a heading put to a done keyword gets `CLOSED:` with the time |
 | `opener` | `open` | the program that opens a web link, which `programs` must hold |
 | `directory` | `~/org` | the folder the agenda reads, which `paths` must hold |
-| `inbox` | `~/org/inbox.org` | the file capture adds to |
+| `templates` | `t inbox.org * TODO %?` | the capture templates, a line each |
 
 ## Not yet
 
 The agenda lists TODO headings, and headings with a `SCHEDULED:` or
 `DEADLINE:` date on the line after them. It has no week view, clocking,
-tags view or custom views. There are no capture templates, tables, export
-or code blocks yet.
+tags view or custom views. There are no tables, export or code blocks yet.
 
 ## Check
 

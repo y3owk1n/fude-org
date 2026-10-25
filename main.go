@@ -237,7 +237,7 @@ func init() {
 	sdk.Object("ih", "a heading's subtree, without the heading", func(start, _ int) (int, int, bool) { return section(start, false) })
 
 	sdk.Define("directory", "~/org", "the folder whose org files the agenda gathers, which the plugin's paths must hold")
-	sdk.Define("inbox", "~/org/inbox.org", "the file capture adds a TODO to")
+	sdk.Define("templates", "t inbox.org * TODO %?", "the capture templates, a line each: a key, a file with ::*heading after it or not, and the text")
 	sdk.Command("OrgAgenda", "shows the TODOs and the dated headings of the org files", func(sdk.Call) { agenda() })
 	sdk.Key("agenda", "<Leader>oa", "shows the agenda, as :OrgAgenda does", func(sdk.Call) { agenda() })
 	sdk.Plug("agenda_open", "opens the heading the agenda shows on the cursor's line", func(c sdk.Call) {
@@ -250,24 +250,18 @@ func init() {
 			report(todoIn(e))
 		}
 	})
-	sdk.Command("OrgCapture", "adds a TODO to the inbox file, the text typed after it or asked for", func(c sdk.Call) {
-		if c.Args != "" {
-			report(capture(c.Args))
+	sdk.Command("OrgCapture", "captures with the first template the text typed after it, or asks for a template and the text", func(c sdk.Call) {
+		if c.Args == "" {
+			askCapture(c.Cursor)
 			return
 		}
-		askCapture()
-	})
-	sdk.Key("capture", "<Leader>oc", "asks for a TODO and adds it to the inbox file", func(sdk.Call) { askCapture() })
-}
-
-// askCapture asks for a TODO and adds it to the inbox file.
-func askCapture() {
-	ask("capture", "", func(text string) error {
-		if text == "" {
-			return nil
+		ts, err := templates()
+		if err == nil {
+			err = capture(ts[0], c.Args, linkHere(c.Cursor))
 		}
-		return capture(text)
+		report(err)
 	})
+	sdk.Key("capture", "<Leader>oc", "asks for a capture template and the text, and adds it to the template's file", func(c sdk.Call) { askCapture(c.Cursor) })
 }
 
 // ask asks for text, with query typed at the start, and runs answer with

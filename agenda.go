@@ -248,25 +248,3 @@ func todoIn(e *Entry) error {
 	agenda()
 	return nil
 }
-
-// capture adds text as a TODO heading at the end of the inbox file.
-func capture(text string) error {
-	inbox, _ := sdk.Option("fude-org.inbox")
-	was := ""
-	if _, ok, err := sdk.Stat(inbox); err != nil {
-		return err
-	} else if ok {
-		if was, err = sdk.ReadFile(inbox); err != nil {
-			return fmt.Errorf("read %s: %w", inbox, err)
-		}
-	} else if err := sdk.MakeDir(path.Dir(inbox)); err != nil {
-		return err
-	}
-	if was != "" && !strings.HasSuffix(was, "\n") {
-		was += "\n"
-	}
-	if err := sdk.WriteFile(inbox, was+"* TODO "+text+"\n"); err != nil {
-		return err
-	}
-	return sdk.Message("captured into " + path.Base(inbox))
-}
