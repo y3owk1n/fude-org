@@ -502,9 +502,9 @@ func cookie(s string) (int, int, bool, bool) {
 }
 
 // recount writes the counts of the cookies in the subtree text of a
-// heading of level: on its heading line, of the checkboxes in its own text
-// or else of its children's TODO keywords, and on its list items, of the
-// checkboxes of the items under each.
+// heading of level. A heading's cookie counts the checkboxes in its own
+// text, or else its children's TODO keywords. A list item's counts the
+// checkboxes of the items under it.
 func recount(text string, lvl int, todo, done []string) string {
 	lines := strings.Split(text, "\n")
 	own := len(lines)
@@ -549,9 +549,10 @@ func recount(text string, lvl int, todo, done []string) string {
 	return strings.Join(lines, "\n")
 }
 
-// boxes counts the ticked checkboxes and all of them among the items of
-// lines nearest under an item indented by indent, or every item for -1,
-// up to the first line indented no more than it.
+// boxes counts the ticked checkboxes and all checkboxes among the items in
+// lines. With indent -1 it counts every item. Otherwise it counts the
+// items nearest under an item indented by indent, up to the first line
+// indented no more than it.
 func boxes(lines []string, indent int) (int, int) {
 	n, total, under := 0, 0, -1
 	for _, l := range lines {

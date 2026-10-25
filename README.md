@@ -95,16 +95,17 @@ none, its children with a TODO keyword. In a list item it counts the
 checkboxes of the items under it. `<C-Space>` and `cit` count again as they
 change one.
 
-A link is `[[target][description]]` or `[[target]]`, and shows as its
-description, or its target, except on the cursor's line. Its target is a
-heading of the file as `*title`, a heading's `CUSTOM_ID` as `#id`, a web
-address, or a file, `file:` before it or not, with `::*title`, `::#id`, a
-line number or text after it to go to in the file.
+A link is `[[target][description]]` or `[[target]]`. Away from the
+cursor's line it shows only its description, or its target when it has
+none. A target is `*title` for a heading of the file, `#id` for a
+heading's `CUSTOM_ID`, a web address, or a file, with `file:` before it or
+not. After a file, `::*title`, `::#id`, a line number or text says where
+to go in it.
 
 Refile lists the headings of the buffer as it is and of the files the
-agenda reads. A subtree takes the level under the heading it goes to. One
-it moves to another file goes there with `fs.write`, which refuses a file
-open with changes not written. Archive keeps where the subtree came from
+agenda reads. A subtree takes the level under the heading it goes to. A
+subtree moved to another file goes through `fs.write`, which refuses a
+file open with changes not written. Archive keeps where the subtree came from
 in its drawer: `ARCHIVE_TIME`, `ARCHIVE_FILE`, `ARCHIVE_OLPATH`,
 `ARCHIVE_CATEGORY` and `ARCHIVE_TODO`.
 
@@ -117,9 +118,9 @@ Anywhere:
 
 The week shows what is overdue and not done, then each of the next seven
 days with what is scheduled or due on it, by time. A date that repeats
-shows on each day it repeats to. A tag match is org's: `work+urgent-home`
-needs work and urgent and not home, and `work|home` either. A heading has
-the tags of the headings it is under too.
+shows on each day it repeats to. Tag matches work as in org.
+`work+urgent-home` needs work and urgent and not home, and `work|home`
+either. A heading has the tags of the headings it is under too.
 
 In the agenda, `<CR>` opens the heading on the cursor's line, `t` puts the
 next TODO keyword on it in its file, and `r` gathers the view again.

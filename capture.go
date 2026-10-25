@@ -16,7 +16,7 @@ type Template struct {
 }
 
 // templates reads the templates option, a template a line: its key, its
-// file with ::*heading after it or not, and its text, apart by blanks.
+// file with ::*heading after it or not, and its text, separated by spaces.
 func templates() ([]Template, error) {
 	v, _ := sdk.Option("fude-org.templates")
 	var out []Template

@@ -240,9 +240,9 @@ func tagged(expr string) {
 	panel("[agenda: "+expr+"]", lines, es)
 }
 
-// matches reports whether tags match expr, as org matches tags: groups
-// separated by |, of which one must match, each of tags with + before one
-// it must have and - before one it must not, + when it has neither.
+// matches reports whether tags match expr, as org matches tags. expr is
+// groups separated by |, and one group must match. A group is tags, each
+// with + before it to need it or - to forbid it, + when it has neither.
 func matches(tags []string, expr string) bool {
 	for _, group := range strings.Split(expr, "|") {
 		terms, ok := 0, true

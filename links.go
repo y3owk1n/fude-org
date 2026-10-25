@@ -68,9 +68,9 @@ func follow(cursor int) bool {
 	return false
 }
 
-// open goes to target: a heading of the buffer for *title, the heading
-// whose CUSTOM_ID is id for #id, the opener's for a URL, and else a file,
-// file: before it or not, at the heading or text after :: in it.
+// open goes to target. *title is a heading of the buffer, #id the heading
+// whose CUSTOM_ID is id, and a URL goes to the opener. Anything else is a
+// file, with file: before it or not, and what follows :: is where in it.
 func open(target string) error {
 	switch {
 	case strings.Contains(target, "://") || strings.HasPrefix(target, "mailto:"):
@@ -104,9 +104,9 @@ func open(target string) error {
 	return sdk.Do(api.Result{Jump: j})
 }
 
-// find returns the line of text a link's search names: the heading with
-// the title after * , the heading whose CUSTOM_ID is the id after #, a
-// line number, or else the first line that holds the text.
+// find returns the line of text a link's search names. *title is a
+// heading, #id the heading whose CUSTOM_ID is id, and a number a line. Any
+// other text is the first line that holds it.
 func find(text, search string) (int, bool) {
 	if n, err := strconv.Atoi(search); err == nil {
 		return n - 1, n > 0
