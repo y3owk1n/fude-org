@@ -17,8 +17,8 @@ func TestFootnotes(t *testing.T) {
 			t.Errorf("%s on the reference went to %+v, want %d", keys, res.Jump, c.want)
 		}
 	}
-	if res := p.Key("<Leader>of", text, 33, 0); res.Jump == nil || res.Jump.Pos != 3 {
-		t.Errorf("<Leader>of on the definition went to %+v, want 3", res.Jump)
+	if res := p.Key("<Leader>of", text, 45, 0); res.Jump == nil || res.Jump.Pos != 3 {
+		t.Errorf("<Leader>of in the definition's text went to %+v, want 3", res.Jump)
 	}
 	// Elsewhere it adds the next footnote, under the Footnotes heading.
 	res := p.Key("<Leader>of", text, 15, 0)

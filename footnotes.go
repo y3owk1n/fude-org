@@ -30,11 +30,11 @@ func footnoteAt(line string, col int) (string, bool, bool) {
 }
 
 // footnote goes from the footnote reference under the cursor to its
-// definition, or from a definition to its first reference. Elsewhere it
-// adds a footnote, a reference at the cursor and its definition under the
-// Footnotes heading, which it makes at the end when there is none. Insert
-// mode starts at the definition. With only, as <CR> asks, it does nothing
-// off a footnote and is false.
+// definition, or from anywhere on a definition to its first reference.
+// Elsewhere it adds a footnote, a reference at the cursor and its
+// definition under the Footnotes heading, which it makes at the end when
+// there is none. Insert mode starts at the definition. With only, as <CR>
+// asks, it does nothing off a footnote's label and is false.
 func footnote(cursor int, only bool) bool {
 	n, _ := sdk.Len()
 	text, _ := sdk.Text(0, n)
@@ -42,6 +42,9 @@ func footnote(cursor int, only bool) bool {
 	l, _ := sdk.LineOf(cursor)
 	start, line := lineAt(l)
 	label, def, ok := footnoteAt(line, cursor-start)
+	if !ok && !only {
+		label, def, ok = footnoteAt(line, 0)
+	}
 	switch {
 	case ok && def:
 		at := 0
