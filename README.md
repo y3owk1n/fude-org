@@ -75,6 +75,7 @@ In an org file:
 | `<Leader>o.`, `<Leader>o!` | puts an active or an inactive timestamp at the cursor |
 | `<Leader>o/` | asks for text and folds the file to show the lines that hold it and the headings over them |
 | `<Leader>ons` | opens the section's subtree alone in a buffer of its own, which `:w` writes back in its place |
+| `<Leader>oC` | shows the section's headings, or the file's, as a table with the columns of the file's `#+COLUMNS:` line |
 | `<Leader>o#` | counts again what the section's `[/]` and `[%]` count |
 | `<CR>` | follows the link under the cursor, or goes to the footnote's definition |
 | `<Leader>of` | goes from a footnote to its definition and back, or adds a footnote at the cursor, its definition under `* Footnotes` |
@@ -109,6 +110,13 @@ A sparse tree closes every fold with `zM` and opens, with `zv`, those that
 hide a matching line, so `zR` shows everything again. A section opened
 to reach a match shows its own text too, where org would hide it, as a
 fude fold holds a section whole.
+
+Column view's columns come from `#+COLUMNS:`, such as
+`%25ITEM %TODO %Effort(Time){:} %COST{+}`, or else org's default,
+`%25ITEM %TODO %3PRIORITY %TAGS`. A column is `ITEM`, `TODO`, `PRIORITY`,
+`TAGS` or a property, with its title in brackets. `{+}` sums the numbers
+of a heading's children and `{:}` their times. `<CR>` on a row goes to its
+heading.
 
 A table's column is to the right when more than half its cells are
 numbers. Its formulas are org's: `$4=$2*$3` sets a column under the first
@@ -184,9 +192,7 @@ Set them in the table's `options`, such as
 
 ## Not yet
 
-Column view,
-custom agenda views, export, code blocks, citations and
-attachments.
+Custom agenda views, export, code blocks, citations and attachments.
 
 ## Check
 

@@ -268,6 +268,7 @@ func init() {
 		report(writeBack())
 		return 0
 	})
+	key("columns", "<Leader>oC", "shows the section's headings, or the file's, with the columns of its #+COLUMNS: line", func(c sdk.Call) { columnView(c.Cursor) })
 	sdk.Object("ah", "a heading and its subtree", func(start, _ int) (int, int, bool) { return section(start, true) })
 	sdk.Object("ih", "a heading's subtree, without the heading", func(start, _ int) (int, int, bool) { return section(start, false) })
 
