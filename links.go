@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"maps"
 	"path"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -51,6 +54,9 @@ func store(pos int) error {
 	t, d := bufferKeys()
 	head, _ := parseHead(h.Text, append(t, d...))
 	stored = "file:" + sdk.Current().Path + "::*" + head.Title
+	if f, _ := front(h); f.prop("ID") != "" {
+		stored = "id:" + f.prop("ID")
+	}
 	return sdk.Message("stored a link to " + head.Title)
 }
 
@@ -76,6 +82,8 @@ func open(target string) error {
 	case strings.Contains(target, "://") || strings.HasPrefix(target, "mailto:"):
 		opener, _ := sdk.Option("fude-org.opener")
 		return sdk.Start(func(_ string, err error) { report(err) }, opener, target)
+	case strings.HasPrefix(target, "id:"):
+		return openID(strings.TrimPrefix(target, "id:"))
 	case strings.HasPrefix(target, "*") || strings.HasPrefix(target, "#"):
 		n, _ := sdk.Len()
 		text, _ := sdk.Text(0, n)
@@ -201,4 +209,79 @@ func showLinks() {
 		}
 	}
 	report(sdk.Do(res))
+}
+
+// ids returns the IDs of text's headings, by the lines of the headings.
+func ids(text string) map[string]int {
+	out := map[string]int{}
+	head := -1
+	for i, line := range strings.Split(text, "\n") {
+		if level(line) > 0 {
+			head = i
+			continue
+		}
+		name, value, _ := strings.Cut(strings.TrimPrefix(strings.TrimSpace(line), ":"), ":")
+		if strings.EqualFold(name, "ID") && head >= 0 {
+			out[strings.TrimSpace(value)] = head
+		}
+	}
+	return out
+}
+
+// openID goes to the heading whose ID is id: in the buffer, or else in
+// the org files once they are read.
+func openID(id string) error {
+	n, _ := sdk.Len()
+	text, _ := sdk.Text(0, n)
+	if line, ok := ids(text)[id]; ok {
+		start, _ := sdk.LineStart(line)
+		return sdk.Do(api.Result{Jump: &api.Jump{Pos: start}})
+	}
+	gather(func() {
+		for _, p := range slices.Sorted(maps.Keys(read)) {
+			if line, ok := read[p].ids[id]; ok {
+				report(sdk.Do(api.Result{Jump: &api.Jump{Path: p, Line: line + 1}}))
+				return
+			}
+		}
+		report(errNotFound("heading with ID " + id))
+	})
+	return nil
+}
+
+// made is how many IDs newID made, so two made at once differ.
+var made uint64
+
+// newID returns an ID in the form of a UUID, from the time and how many
+// it made before, as a plugin has no random source.
+func newID() string {
+	made++
+	x := uint64(sdk.Now().UnixNano()) ^ made*0x9e3779b97f4a7c15
+	y := x*0xbf58476d1ce4e5b9 ^ made
+	for i := 0; i < 3; i++ {
+		x ^= x << 13
+		x ^= x >> 7
+		x ^= x << 17
+		y ^= y << 13
+		y ^= y >> 7
+		y ^= y << 17
+	}
+	h := fmt.Sprintf("%016x%016x", x, y)
+	return h[0:8] + "-" + h[8:12] + "-4" + h[13:16] + "-" + h[16:20] + "-" + h[20:32]
+}
+
+// setID gives the heading of the section that holds cursor an ID, unless
+// it has one.
+func setID(cursor int) error {
+	h, ok := owner(cursor)
+	if !ok {
+		return errNotFound("heading")
+	}
+	f, end := front(h)
+	if id := f.prop("ID"); id != "" {
+		return sdk.Message("the heading has the ID " + id)
+	}
+	f.setProp("ID", newID())
+	putFront(h, f, end)
+	return nil
 }

@@ -29,6 +29,7 @@ type file struct {
 	changed time.Time
 	entries []Entry
 	heads   []Target
+	ids     map[string]int // by ID, the line of the heading that has it
 }
 
 // read keeps each file the agenda read, so the agenda reads a file again
@@ -116,7 +117,7 @@ func readFile(p string) error {
 	if err != nil {
 		return fmt.Errorf("read %s: %w", p, err)
 	}
-	read[p] = file{f.Changed, entries(p, text), targets(p, text)}
+	read[p] = file{f.Changed, entries(p, text), targets(p, text), ids(text)}
 	return nil
 }
 

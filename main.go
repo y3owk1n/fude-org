@@ -248,6 +248,7 @@ func init() {
 	})
 	key("footnote", "<Leader>of", "goes from a footnote to its definition and back, or adds one at the cursor", func(c sdk.Call) { footnote(c.Cursor, false) })
 	key("store_link", "<Leader>ols", "stores a link to the section's heading for <Leader>oli", func(c sdk.Call) { report(store(c.Cursor)) })
+	key("set_id", "<Leader>olI", "gives the section's heading an ID, for links that follow it to any file", func(c sdk.Call) { report(setID(c.Cursor)) })
 	key("insert_link", "<Leader>oli", "asks for a link, from the one stored, and a description, and puts it at the cursor", func(c sdk.Call) { insertLink(c.Cursor) })
 	sdk.On("buffer.opened", func(sdk.Event) { showLinks() })
 	sdk.On("buffer.changed", func(sdk.Event) { showLinks() })
