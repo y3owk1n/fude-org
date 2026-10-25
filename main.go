@@ -263,6 +263,11 @@ func init() {
 	key("sparse", "<Leader>o/", "asks for text and folds the file so it shows the lines that hold it and the headings over them", func(sdk.Call) {
 		ask("show", "", sparse)
 	})
+	key("narrow", "<Leader>ons", "opens the section's subtree in a buffer of its own, which :w writes back", func(c sdk.Call) { report(narrow(c.Cursor)) })
+	sdk.Register(api.Registration{Kind: api.Write, Name: "org-narrow", Help: "writes a narrowed subtree back in place of the one it came from"}, func(_, _, _ int) int {
+		report(writeBack())
+		return 0
+	})
 	sdk.Object("ah", "a heading and its subtree", func(start, _ int) (int, int, bool) { return section(start, true) })
 	sdk.Object("ih", "a heading's subtree, without the heading", func(start, _ int) (int, int, bool) { return section(start, false) })
 

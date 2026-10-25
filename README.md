@@ -74,6 +74,7 @@ In an org file:
 | `<Leader>os`, `<Leader>od` | asks when the section is scheduled or due |
 | `<Leader>o.`, `<Leader>o!` | puts an active or an inactive timestamp at the cursor |
 | `<Leader>o/` | asks for text and folds the file to show the lines that hold it and the headings over them |
+| `<Leader>ons` | opens the section's subtree alone in a buffer of its own, which `:w` writes back in its place |
 | `<Leader>o#` | counts again what the section's `[/]` and `[%]` count |
 | `<CR>` | follows the link under the cursor, or goes to the footnote's definition |
 | `<Leader>of` | goes from a footnote to its definition and back, or adds a footnote at the cursor, its definition under `* Footnotes` |
@@ -183,7 +184,7 @@ Set them in the table's `options`, such as
 
 ## Not yet
 
-Column view, narrowing,
+Column view,
 custom agenda views, export, code blocks, citations and
 attachments.
 

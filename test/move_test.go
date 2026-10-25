@@ -74,3 +74,11 @@ func TestSparse(t *testing.T) {
 		t.Errorf("<Leader>o/ bread asked for %+v", res)
 	}
 }
+
+func TestNarrow(t *testing.T) {
+	p := load(t, plugin.Grants{})
+	res := p.Key("<Leader>ons", "* Home\nmilk\n* Work\n** Report\ndraft\n* Fun", 17, 0)
+	if s := res.Scratch; s == nil || s.Text != "* Work\n** Report\ndraft" || s.Kind != "org-narrow" || s.Filetype != "org" {
+		t.Errorf("<Leader>ons opened %+v", res.Scratch)
+	}
+}
