@@ -150,8 +150,21 @@ Anywhere:
 
 | Keys | Command | What it does |
 |---|---|---|
-| `<Leader>oa` | `:OrgAgenda [week\|todo\|tags MATCH]` | asks for an agenda view, or shows the one named: the week, every TODO, or the headings whose tags match |
+| `<Leader>oa` | `:OrgAgenda [VIEW]` | asks for an agenda view, or shows the one named |
 | `<Leader>oc` | `:OrgCapture [text]` | asks for a capture template and the text, or captures the text typed after it with the first template |
+
+An agenda view is `week` and a number of days, 7 by default, `todo` and
+keywords to show only those, `tags` and a match, `search` and text, which
+lists each line of the org files that holds it, or a key of the `views`
+option. Each line of `views` is a key and a view:
+
+```toml
+options = { views = """
+n todo NEXT WAIT
+f week 14
+w tags work-meeting
+""" }
+```
 
 The week shows what is overdue and not done, then each of the next seven
 days with what is scheduled or due on it, by time. A date that repeats
@@ -188,11 +201,12 @@ Set them in the table's `options`, such as
 | `log_done` | `true` | a heading put to a done keyword gets `CLOSED:` with the time |
 | `opener` | `open` | the program that opens a web link, which `programs` must hold |
 | `directory` | `~/org` | the folder the agenda reads, which `paths` must hold |
+| `views` | none | the agenda's own views, a line each: a key and a view |
 | `templates` | `t inbox.org * TODO %?` | the capture templates, a line each |
 
 ## Not yet
 
-Custom agenda views, export, code blocks, citations and attachments.
+Export, code blocks, citations and attachments.
 
 ## Check
 

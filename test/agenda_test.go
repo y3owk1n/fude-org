@@ -137,3 +137,30 @@ func TestCapture(t *testing.T) {
 		t.Errorf("the journal holds %q, want %q", b, want)
 	}
 }
+
+func TestCustomViews(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "a.org"), []byte("* NEXT Call\n* TODO Shop for milk :errand:\n* WAIT Reply\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	p := load(t, plugin.Grants{Paths: []string{dir}, Options: map[string]string{
+		"directory": dir,
+		"todo":      "TODO NEXT WAIT | DONE",
+		"views":     "n todo NEXT WAIT\nf week 2\ne tags errand",
+	}})
+	for args, want := range map[string]int{"n": 2, "f": 2, "e": 1, "search MILK": 1} {
+		got := lines(t, p, args)
+		switch {
+		case args == "f" && (len(got) != 2 || !strings.HasPrefix(got[0], time.Now().Format("Mon"))):
+			t.Errorf(":OrgAgenda f showed %q, want two days", got)
+		case args != "f" && len(got) != want:
+			t.Errorf(":OrgAgenda %s showed %q, want %d lines", args, got, want)
+		}
+	}
+	if got := lines(t, p, "search milk"); got[0] != "a.org:2: * TODO Shop for milk :errand:" {
+		t.Errorf("search showed %q", got)
+	}
+	if res := p.Command("OrgAgenda", "z", "", 0); res.Error == "" {
+		t.Error(":OrgAgenda z said nothing")
+	}
+}

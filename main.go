@@ -5,7 +5,9 @@ package main
 
 import (
 	"errors"
+	"maps"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/y3owk1n/fude/api"
@@ -274,7 +276,8 @@ func init() {
 
 	sdk.Define("directory", "~/org", "the folder whose org files the agenda gathers, which the plugin's paths must hold")
 	sdk.Define("templates", "t inbox.org * TODO %?", "the capture templates, a line each: a key, a file with ::*heading after it or not, and the text")
-	sdk.Command("OrgAgenda", "shows the agenda: the week, todo for every TODO, or tags and a match such as work+urgent-home", func(c sdk.Call) { report(showView(c.Args)) })
+	sdk.Define("views", "", "the agenda's own views, a line each: a key and a view, such as w tags work+urgent")
+	sdk.Command("OrgAgenda", "shows the agenda view named: week and days, todo and keywords, tags and a match, search and text, or a key of the views option", func(c sdk.Call) { report(showView(c.Args)) })
 	sdk.Key("agenda", "<Leader>oa", "asks for an agenda view, the week, every TODO or a match of tags, and shows it", func(sdk.Call) { pickView() })
 	sdk.Plug("agenda_again", "gathers the agenda again and shows the view shown last", func(sdk.Call) { agenda() })
 	sdk.Plug("agenda_open", "opens the heading the agenda shows on the cursor's line", func(c sdk.Call) {
@@ -301,37 +304,81 @@ func init() {
 	sdk.Key("capture", "<Leader>oc", "asks for a capture template and the text, and adds it to the template's file", func(c sdk.Call) { askCapture(c.Cursor) })
 }
 
-// showView shows the agenda view args names: week, the default, todo, or
-// tags and a match.
+// builtins are the agenda's own views, and what each asks for.
+var builtins = []struct{ name, asks string }{{"week", ""}, {"todo", ""}, {"tags", "match tags"}, {"search", "search for"}}
+
+// customViews reads the views option: a view a line, a key and the view it
+// shows, such as w tags work+urgent.
+func customViews() map[string]string {
+	v, _ := sdk.Option("fude-org.views")
+	out := map[string]string{}
+	for line := range strings.Lines(v) {
+		if key, view, ok := strings.Cut(strings.TrimSpace(line), " "); ok {
+			out[key] = strings.TrimSpace(view)
+		}
+	}
+	return out
+}
+
+// showView shows the agenda view args names: week and a number of days,
+// todo and keywords, tags and a match, search and text, or the key of a
+// view of the views option.
 func showView(args string) error {
-	name, match, _ := strings.Cut(strings.TrimSpace(args), " ")
+	name, rest, _ := strings.Cut(strings.TrimSpace(args), " ")
+	rest = strings.TrimSpace(rest)
 	switch name {
 	case "", "week":
-		view = week
-	case "todo":
-		view = todos
-	case "tags":
-		if match = strings.TrimSpace(match); match == "" {
-			return errors.New("tags needs a match, such as work+urgent-home")
+		days := 7
+		if rest != "" {
+			n, err := strconv.Atoi(rest)
+			if err != nil || n < 1 {
+				return errors.New("week takes a number of days")
+			}
+			days = n
 		}
-		view = func() { tagged(match) }
+		view = func() { week(days) }
+	case "todo":
+		keywords := strings.Fields(rest)
+		view = func() { todos(keywords) }
+	case "tags", "search":
+		if rest == "" {
+			return errors.New(name + " needs what to look for")
+		}
+		view = func() { tagged(rest) }
+		if name == "search" {
+			view = func() { search(rest) }
+		}
 	default:
-		return errors.New("no agenda view " + name + ": week, todo or tags")
+		custom, ok := customViews()[name]
+		if !ok {
+			return errors.New("no agenda view " + name)
+		}
+		return showView(custom)
 	}
 	agenda()
 	return nil
 }
 
-// pickView asks for an agenda view, and for a match of tags, and shows it.
+// pickView asks for an agenda view, its own or one of the views option,
+// and what a view looks for, and shows it.
 func pickView() {
-	report(sdk.Pick("agenda", []string{"week", "todo", "tags"}, func(i int, ok bool) {
-		switch {
-		case !ok:
-		case i == 2:
-			ask("match tags", "", func(match string) error { return showView("tags " + match) })
-		default:
-			report(showView([]string{"week", "todo"}[i]))
+	var items, names []string
+	for _, b := range builtins {
+		items, names = append(items, b.name), append(names, b.name)
+	}
+	custom := customViews()
+	for _, key := range slices.Sorted(maps.Keys(custom)) {
+		items, names = append(items, key+"  "+custom[key]), append(names, key)
+	}
+	report(sdk.Pick("agenda", items, func(i int, ok bool) {
+		if !ok {
+			return
 		}
+		if i < len(builtins) && builtins[i].asks != "" {
+			ask(builtins[i].asks, "", func(text string) error { return showView(names[i] + " " + text) })
+			return
+		}
+		report(showView(names[i]))
 	}))
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"cmp"
 	"fmt"
+	"strconv"
 	"maps"
 	"path"
 	"slices"
@@ -30,6 +31,7 @@ type file struct {
 	entries []Entry
 	heads   []Target
 	ids     map[string]int // by ID, the line of the heading that has it
+	text    string
 }
 
 // read keeps each file the agenda read, so the agenda reads a file again
@@ -50,7 +52,7 @@ var scan struct {
 const slice = 40 * time.Millisecond
 
 // view is the agenda view shown last, which r and t show again.
-var view = week
+var view = func() { week(7) }
 
 // agenda gathers the org files under the directory option and shows the
 // view shown last, the week at first.
@@ -117,7 +119,7 @@ func readFile(p string) error {
 	if err != nil {
 		return fmt.Errorf("read %s: %w", p, err)
 	}
-	read[p] = file{f.Changed, entries(p, text), targets(p, text), ids(text)}
+	read[p] = file{f.Changed, entries(p, text), targets(p, text), ids(text), text}
 	return nil
 }
 
@@ -162,10 +164,10 @@ func all() []*Entry {
 	return out
 }
 
-// week shows what is overdue and not done, then each of the next seven
+// week shows what is overdue and not done, then each of the next days
 // days with what is scheduled or due on it, a date that repeats on each
 // day it repeats to.
-func week() {
+func week(days int) {
 	day := today()
 	var lines []string
 	var shown []*Entry
@@ -184,7 +186,7 @@ func week() {
 	if len(overdue) > 0 {
 		add("Overdue", overdue, false)
 	}
-	for n := range 7 {
+	for n := range days {
 		d := day.AddDate(0, 0, n)
 		var on []*Entry
 		for _, e := range all() {
@@ -195,7 +197,7 @@ func week() {
 		slices.SortStableFunc(on, func(a, b *Entry) int { return strings.Compare(a.Date.Time, b.Date.Time) })
 		add(d.Format("Mon 2006-01-02"), on, true)
 	}
-	panel("[agenda: week]", lines, shown)
+	panel("[agenda: "+strconv.Itoa(days)+" days]", lines, shown)
 }
 
 // repeatsTo reports whether st repeats to the day d, after its own.
@@ -212,12 +214,12 @@ func repeatsTo(st Stamp, d time.Time) bool {
 	return false
 }
 
-// todos shows every heading with a TODO keyword that is not done, by
-// priority.
-func todos() {
+// todos shows every heading with a TODO keyword that is not done, or with
+// one of keywords when it names any, by priority.
+func todos(keywords []string) {
 	var es []*Entry
 	for _, e := range all() {
-		if e.Keyword != "" && !e.Done {
+		if e.Keyword != "" && !e.Done && (len(keywords) == 0 || slices.Contains(keywords, e.Keyword)) {
 			es = append(es, e)
 		}
 	}
@@ -227,6 +229,23 @@ func todos() {
 		lines = append(lines, describe(e, false))
 	}
 	panel("[agenda: TODOs]", lines, es)
+}
+
+// search shows each line of the org files that holds text, any case, by
+// file and line.
+func search(text string) {
+	needle := strings.ToLower(text)
+	var es []*Entry
+	var lines []string
+	for _, p := range slices.Sorted(maps.Keys(read)) {
+		for i, line := range strings.Split(read[p].text, "\n") {
+			if strings.Contains(strings.ToLower(line), needle) {
+				es = append(es, &Entry{Path: p, Line: i})
+				lines = append(lines, path.Base(p)+":"+strconv.Itoa(i+1)+": "+strings.TrimSpace(line))
+			}
+		}
+	}
+	panel("[agenda: "+text+"]", lines, es)
 }
 
 // tagged shows each heading whose tags match expr, as matches reads it.
