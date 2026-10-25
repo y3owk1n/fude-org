@@ -231,6 +231,8 @@ func init() {
 	key("insert_link", "<Leader>oli", "asks for a link, from the one stored, and a description, and puts it at the cursor", func(c sdk.Call) { insertLink(c.Cursor) })
 	sdk.On("buffer.opened", func(sdk.Event) { showLinks() })
 	sdk.On("buffer.changed", func(sdk.Event) { showLinks() })
+	key("refile", "<Leader>or", "asks for a heading of the org files and moves the section's subtree under it", func(c sdk.Call) { refile(c.Cursor) })
+	key("archive", "<Leader>o$", "moves the section's subtree to the file's archive, <file>_archive", func(c sdk.Call) { report(archive(c.Cursor)) })
 	sdk.Object("ah", "a heading and its subtree", func(start, _ int) (int, int, bool) { return section(start, true) })
 	sdk.Object("ih", "a heading's subtree, without the heading", func(start, _ int) (int, int, bool) { return section(start, false) })
 

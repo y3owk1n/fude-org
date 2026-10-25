@@ -3,6 +3,7 @@ package test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/y3owk1n/fude/api"
@@ -56,5 +57,30 @@ func TestInsertLink(t *testing.T) {
 	res = p.Callback(res.Pick.ID, text, api.Context{"text": "the plans", "ok": "true"})
 	if got := applied(text, res); got != "* Plans\nbody [[*Plans][the plans]]" {
 		t.Errorf("<Leader>oli left %q", got)
+	}
+}
+
+func TestShowLinks(t *testing.T) {
+	p := load(t, plugin.Grants{})
+	p.Filetype = "org"
+	text := "see [[*B][b]] and [[x]]"
+	res := p.Event("buffer.opened", text)
+	var shown []string
+	hidden := ""
+	for _, d := range res.Decorate {
+		switch {
+		case d.Style == "markup.link":
+			shown = append(shown, text[d.Start:d.End])
+		case d.Replace && d.Note == "":
+			hidden += text[d.Start:d.End]
+		}
+	}
+	if strings.Join(shown, " ") != "b x" || hidden != "[[*B][]][[]]" {
+		t.Errorf("the links show %q and hide %q", shown, hidden)
+	}
+	// Outside an org file nothing is hidden.
+	p.Filetype = "markdown"
+	if res := p.Event("buffer.opened", text); len(res.Decorate) != 0 {
+		t.Errorf("a markdown file's links were decorated: %+v", res.Decorate)
 	}
 }

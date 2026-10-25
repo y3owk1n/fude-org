@@ -22,21 +22,24 @@ type Entry struct {
 	Deadline             bool
 }
 
-// file is what the agenda last read of a file: when it changed then, and
-// its entries.
+// file is what the agenda last read of a file: when it changed then, its
+// entries and its headings.
 type file struct {
 	changed time.Time
 	entries []Entry
+	heads   []Target
 }
 
 // read keeps each file the agenda read, so the agenda reads a file again
 // only once it changes.
 var read = map[string]file{}
 
-// scan is the agenda being gathered: the folders still to list and the
-// files still to read, and what each line of the agenda shows once shown.
+// scan is the agenda being gathered: the folders still to list, the files
+// still to read, what runs once all are read, and what each line of the
+// agenda shows once shown.
 var scan struct {
 	dirs, files []string
+	then        func()
 	shown       []*Entry
 }
 
@@ -44,16 +47,21 @@ var scan struct {
 // budget of a callback.
 const slice = 40 * time.Millisecond
 
-// agenda gathers the entries of the org files under the directory option,
-// a step in each callback, and then shows them.
-func agenda() {
+// agenda gathers the org files under the directory option and then shows
+// their entries.
+func agenda() { gather(show) }
+
+// gather reads the org files under the directory option, a step in each
+// callback, and then runs then.
+func gather(then func()) {
 	dir, _ := sdk.Option("fude-org.directory")
-	scan.dirs, scan.files = []string{dir}, nil
+	scan.dirs, scan.files, scan.then = []string{dir}, nil, then
 	report(sdk.After(0, step))
 }
 
 // step lists folders and reads files until its slice of time is up, then
-// asks for the next step, or shows the agenda once all are read.
+// asks for the next step, or runs what gather was given once all are
+// read.
 func step() {
 	until := sdk.Now().Add(slice)
 	for sdk.Now().Before(until) {
@@ -83,7 +91,7 @@ func step() {
 				return
 			}
 		default:
-			show()
+			scan.then()
 			return
 		}
 	}
@@ -104,7 +112,7 @@ func readFile(p string) error {
 	if err != nil {
 		return fmt.Errorf("read %s: %w", p, err)
 	}
-	read[p] = file{f.Changed, entries(p, text)}
+	read[p] = file{f.Changed, entries(p, text), targets(p, text)}
 	return nil
 }
 

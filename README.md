@@ -72,6 +72,8 @@ In an org file:
 | `<Leader>o.`, `<Leader>o!` | puts an active or an inactive timestamp at the cursor |
 | `<Leader>o#` | counts again what the section's `[/]` and `[%]` count |
 | `<CR>` | follows the link under the cursor |
+| `<Leader>or` | asks for a heading of the org files, or a file, and moves the section's subtree under it |
+| `<Leader>o$` | moves the section's subtree to the end of the file's archive, `<file>_archive` |
 | `<Leader>ols`, `<Leader>oli` | stores a link to the section's heading, or asks for a link, from the one stored, and a description, and puts it at the cursor |
 
 Off a heading, a list item or a timestamp, each key does what it does in
@@ -98,6 +100,13 @@ description, or its target, except on the cursor's line. Its target is a
 heading of the file as `*title`, a heading's `CUSTOM_ID` as `#id`, a web
 address, or a file, `file:` before it or not, with `::*title`, `::#id`, a
 line number or text after it to go to in the file.
+
+Refile lists the headings of the buffer as it is and of the files the
+agenda reads. A subtree takes the level under the heading it goes to. One
+it moves to another file goes there with `fs.write`, which refuses a file
+open with changes not written. Archive keeps where the subtree came from
+in its drawer: `ARCHIVE_TIME`, `ARCHIVE_FILE`, `ARCHIVE_OLPATH`,
+`ARCHIVE_CATEGORY` and `ARCHIVE_TODO`.
 
 Anywhere:
 
@@ -127,8 +136,8 @@ Set them in the table's `options`, such as
 
 The agenda lists TODO headings, and headings with a `SCHEDULED:` or
 `DEADLINE:` date on the line after them. It has no week view, clocking,
-tags view or custom views. There are no refile,
-archive, capture templates, tables, export or code blocks yet.
+tags view or custom views. There are no capture templates, tables, export
+or code blocks yet.
 
 ## Check
 
