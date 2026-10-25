@@ -266,10 +266,16 @@ func init() {
 		ask("show", "", sparse)
 	})
 	key("narrow", "<Leader>ons", "opens the section's subtree in a buffer of its own, which :w writes back", func(c sdk.Call) { report(narrow(c.Cursor)) })
-	sdk.Register(api.Registration{Kind: api.Write, Name: "org-narrow", Help: "writes a narrowed subtree back in place of the one it came from"}, func(_, _, _ int) int {
-		report(writeBack())
-		return 0
-	})
+	for _, kind := range []string{"org-narrow", "org-src"} {
+		sdk.Register(api.Registration{Kind: api.Write, Name: kind, Help: "writes a narrowed subtree or a source block back in place of the one it came from"}, func(_, _, _ int) int {
+			report(writeBack())
+			return 0
+		})
+	}
+	sdk.Define("languages", "sh=sh bash=bash python=python3 js=node ruby=ruby", "the program that runs each language's source blocks, as language=program, which the plugin's programs must hold")
+	key("run_block", "<Leader>obe", "runs the source block and puts what it prints under #+RESULTS:", func(c sdk.Call) { report(runBlock(c.Cursor)) })
+	key("tangle", "<Leader>obt", "writes each source block with :tangle path to that file", func(sdk.Call) { report(tangle()) })
+	key("edit_block", "<Leader>o'", "opens the source block in a buffer of its language, which :w writes back", func(c sdk.Call) { report(editBlock(c.Cursor)) })
 	key("columns", "<Leader>oC", "shows the section's headings, or the file's, with the columns of its #+COLUMNS: line", func(c sdk.Call) { columnView(c.Cursor) })
 	sdk.Define("pandoc", "pandoc", "the program export runs, which the plugin's programs must hold")
 	sdk.Command("OrgExport", "writes the buffer beside its file in a format with pandoc: html, md, pdf, docx, odt, latex, epub or txt", func(c sdk.Call) { report(export(c.Args)) })

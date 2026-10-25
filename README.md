@@ -24,7 +24,7 @@ Add this table to fude's `config.toml`:
 [[plugin]]
 path = "/path/to/fude-org/fude-org.wasm"
 capabilities = ["buffer.read", "buffer.write", "ui", "fs.read", "fs.write", "process", "keys", "grammar"]
-programs = ["open", "pandoc"]
+programs = ["open", "pandoc", "sh", "python3", "node"]
 paths = ["~/org"]
 ```
 
@@ -36,8 +36,9 @@ paths = ["~/org"]
 - `paths` is the folder of your org files, which the agenda reads and
   capture writes to.
 - `process` and `programs` let a web link open with `open`, or with
-  `xdg-open` on Linux, set as the `opener` option too, and export run
-  pandoc. Leave out what you do not use.
+  `xdg-open` on Linux, set as the `opener` option too, export run
+  pandoc, and source blocks run their languages. Leave out what you do
+  not use.
 - `keys` lets `<Tab>` and `<S-Tab>` run fude's fold cycling. A guest of a
   shared session may not use a plugin granted `keys`.
 
@@ -77,6 +78,9 @@ In an org file:
 | `<Leader>o/` | asks for text and folds the file to show the lines that hold it and the headings over them |
 | `<Leader>ons` | opens the section's subtree alone in a buffer of its own, which `:w` writes back in its place |
 | `<Leader>oC` | shows the section's headings, or the file's, as a table with the columns of the file's `#+COLUMNS:` line |
+| `<Leader>obe` | runs the source block and puts what it prints under `#+RESULTS:` |
+| `<Leader>obt` | writes each source block with `:tangle path` to that file |
+| `<Leader>o'` | opens the source block in a buffer of its language, which `:w` writes back |
 | `<Leader>o#` | counts again what the section's `[/]` and `[%]` count |
 | `<CR>` | follows the link under the cursor, or goes to the footnote's definition |
 | `<Leader>of` | goes from a footnote to its definition and back, or adds a footnote at the cursor, its definition under `* Footnotes` |
@@ -118,6 +122,11 @@ Column view's columns come from `#+COLUMNS:`, such as
 `TAGS` or a property, with its title in brackets. `{+}` sums the numbers
 of a heading's children and `{:}` their times. `<CR>` on a row goes to its
 heading.
+
+A source block runs with the program the `languages` option gives its
+language, its text the program's input. What it prints replaces the
+block's `#+RESULTS:`, a line of `: ` each. Tangling writes the blocks of
+one file in their order, beside the org file.
 
 A table's column is to the right when more than half its cells are
 numbers. Its formulas work as in org. `$4=$2*$3` sets a column under the
@@ -205,11 +214,12 @@ Set them in the table's `options`, such as
 | `directory` | `~/org` | the folder the agenda reads, which `paths` must hold |
 | `views` | none | the agenda's own views, a line each: a key and a view |
 | `pandoc` | `pandoc` | the program export runs, which `programs` must hold |
+| `languages` | `sh=sh bash=bash python=python3 js=node ruby=ruby` | the program that runs each language's source blocks, which `programs` must hold |
 | `templates` | `t inbox.org * TODO %?` | the capture templates, a line each |
 
 ## Not yet
 
-Code blocks, citations and attachments.
+Citations and attachments.
 
 ## Check
 

@@ -8,11 +8,12 @@ import (
 	"github.com/y3owk1n/fude/sdk"
 )
 
-// narrowed is the subtree the narrow buffer holds: the buffer it came from
-// and its text there, as it was last written.
+// narrowed is the text a narrow buffer holds, a subtree or a source
+// block's: the buffer it came from, the text right before it there, which
+// finds it, and its text, as they were last written.
 var narrowed struct {
-	from int
-	text string
+	from         int
+	before, text string
 }
 
 // narrow opens the subtree of the section that holds cursor in a buffer of
@@ -22,23 +23,24 @@ func narrow(cursor int) error {
 	if !ok {
 		return errors.New("no heading here")
 	}
-	narrowed.from = sdk.Current().ID
+	narrowed.from, narrowed.before = sdk.Current().ID, ""
 	narrowed.text, _ = sdk.Text(h.Start, subtree(h))
 	return sdk.Do(api.Result{Scratch: &api.Scratch{Text: strings.TrimSuffix(narrowed.text, "\n"), Filetype: "org", Where: "here", Kind: "org-narrow"}})
 }
 
-// writeBack writes the narrow buffer's text in place of the subtree it
-// came from, which must be as it was last written.
+// writeBack writes the narrow buffer's text in place of the text it came
+// from, which must be as it was last written.
 func writeBack() error {
 	total, err := sdk.LenOf(narrowed.from)
 	if err != nil {
 		return errors.New("the file the subtree came from is closed")
 	}
 	src, _ := sdk.TextOf(narrowed.from, 0, total)
-	at := strings.Index(src, narrowed.text)
+	at := strings.Index(src, narrowed.before+narrowed.text)
 	if at < 0 {
-		return errors.New("the subtree changed in its file since it was narrowed")
+		return errors.New("the text changed in its file since it was opened")
 	}
+	at += len(narrowed.before)
 	n, _ := sdk.Len()
 	text, _ := sdk.Text(0, n)
 	if strings.HasSuffix(narrowed.text, "\n") && !strings.HasSuffix(text, "\n") {
