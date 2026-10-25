@@ -1,6 +1,6 @@
-# fude-org in half a minute: the outline folds and cycles, a TODO and a
-# checkbox change, a subtree moves, and capture and the agenda work across
-# the files in ~/org.
+# fude-org in under a minute: the outline folds and cycles, a TODO, a
+# checkbox and a date change, a subtree moves, and capture and the agenda's
+# week work across the files in ~/org.
 Output demos/org.gif
 Output demos/out/org.mp4
 Source demos/style.tape
@@ -43,18 +43,36 @@ Sleep 1.2s
 Tab
 Sleep 1.5s
 
-# cit marks the groceries done, and <C-Space> ticks the milk.
+# cit marks the groceries done with the time, and <C-Space> ticks the
+# milk.
 Type "4G"
 Sleep 400ms
 Type "cit"
 Sleep 1.2s
-Type "j"
+Type "jj"
 Sleep 400ms
 Ctrl+Space
 Sleep 1.5s
 
+# <Leader>os schedules Errands, from a date typed as org reads one.
+Type "/Errands"
+Enter
+Sleep 400ms
+Type " os"
+Sleep 600ms
+Type@80ms "fri 10:00"
+Enter
+Sleep 600ms
+Type ":noh"
+Enter
+Sleep 1s
+
 # <Leader>oJ moves Projects and its subtree below Reading.
-Type "9G"
+Type "/^\\* Projects"
+Enter
+Sleep 400ms
+Type ":noh"
+Enter
 Sleep 400ms
 Type " oJ"
 Sleep 2s
@@ -70,15 +88,17 @@ Type ":w"
 Enter
 Sleep 800ms
 
-# The agenda gathers every file in ~/org: overdue, today, this week, and
-# the TODOs with no date. t marks one done in its file, and <CR> opens one.
+# The agenda's week gathers every file in ~/org: what is overdue, then
+# each day. t marks one done in its file, and <CR> opens one.
 Type " oa"
+Sleep 800ms
+Enter
 Sleep 2.5s
-Type "jjjj"
+Type "jjj"
 Sleep 600ms
 Type "t"
 Sleep 2s
-Type "G"
+Type "ggj"
 Sleep 600ms
 Enter
 Sleep 2.5s
