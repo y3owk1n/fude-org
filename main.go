@@ -98,6 +98,49 @@ func init() {
 			move(h, true)
 		}
 	})
+	key("next_heading", "]]", "goes to the next heading, or the n-th", func(c sdk.Call) {
+		n, _ := sdk.LineOf(c.Cursor)
+		goTo(headingFrom(n, max(c.Count, 1), false))
+	})
+	key("prev_heading", "[[", "goes to the heading above, or the n-th", func(c sdk.Call) {
+		n, _ := sdk.LineOf(c.Cursor)
+		goTo(headingFrom(n, max(c.Count, 1), true))
+	})
+	key("next_sibling", "][", "goes to the next heading of the section's level, or the n-th", func(c sdk.Call) {
+		goTo(siblings(c, true))
+	})
+	key("prev_sibling", "[]", "goes to the heading of the section's level above, or the n-th", func(c sdk.Call) {
+		goTo(siblings(c, false))
+	})
+	key("parent", "g{", "goes to the section's heading, or from a heading to the one it is under", func(c sdk.Call) {
+		h, ok := owner(c.Cursor)
+		if n, _ := sdk.LineOf(c.Cursor); ok && n == h.Line {
+			h, ok = parent(h)
+		}
+		goTo(h, ok)
+	})
+	key("meta_return", "<Leader><CR>", "adds a heading after the heading's subtree, or an item after the list item", func(c sdk.Call) {
+		n, _ := sdk.LineOf(c.Cursor)
+		_, text := lineAt(n)
+		if it, ok := parseItem(text); ok {
+			insertLine(itemEnd(n, it), it.next())
+		} else if h, ok := headingAt(n); ok {
+			addHeading(c.Cursor, h, h.Level, "")
+		}
+	})
+	key("insert_heading", "<Leader>oih", "adds a heading of the section's level after its subtree", func(c sdk.Call) {
+		h, _ := owner(c.Cursor)
+		addHeading(c.Cursor, h, max(h.Level, 1), "")
+	})
+	key("insert_todo", "<Leader>oit", "adds a TODO heading of the section's level after its subtree", func(c sdk.Call) {
+		h, _ := owner(c.Cursor)
+		t, _ := bufferKeys()
+		addHeading(c.Cursor, h, max(h.Level, 1), t[0])
+	})
+	key("insert_subheading", "<Leader>ois", "adds a heading under the section's heading, after its subtree", func(c sdk.Call) {
+		h, _ := owner(c.Cursor)
+		addHeading(c.Cursor, h, h.Level+1, "")
+	})
 	sdk.Object("ah", "a heading and its subtree", func(start, _ int) (int, int, bool) { return section(start, true) })
 	sdk.Object("ih", "a heading's subtree, without the heading", func(start, _ int) (int, int, bool) { return section(start, false) })
 
@@ -139,6 +182,49 @@ func report(err error) {
 	if err != nil {
 		sdk.Do(api.Result{Error: err.Error()})
 	}
+}
+
+// goTo moves the cursor to h, or says there is no heading there.
+func goTo(h Heading, ok bool) {
+	if !ok {
+		sdk.Do(api.Result{Error: "no heading there"})
+		return
+	}
+	sdk.Do(api.Result{Jump: &api.Jump{Pos: h.Start}})
+}
+
+// siblings returns the n-th heading of the section's level after it, or
+// before it.
+func siblings(c sdk.Call, below bool) (Heading, bool) {
+	h, ok := owner(c.Cursor)
+	for range max(c.Count, 1) {
+		if !ok {
+			break
+		}
+		h, ok = sibling(h, below)
+	}
+	return h, ok
+}
+
+// addHeading adds a heading of level, with keyword, after h's subtree, or
+// after the line that holds cursor when there is no h, and starts insert
+// mode at its end.
+func addHeading(cursor int, h Heading, level int, keyword string) {
+	line := strings.Repeat("*", level) + " "
+	if keyword != "" {
+		line += keyword + " "
+	}
+	n, _ := sdk.Len()
+	at := n
+	switch end := subtree(h); {
+	case h.Level == 0:
+		l, _ := sdk.LineOf(cursor)
+		start, text := lineAt(l)
+		at = start + len(text)
+	case end < n:
+		at = end - 1
+	}
+	insertLine(at, line)
 }
 
 // edit asks for e.

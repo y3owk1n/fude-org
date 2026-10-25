@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/y3owk1n/fude/api"
@@ -189,4 +190,89 @@ func isBullet(s string) bool {
 	}
 	digits := strings.TrimRight(s, ".)")
 	return len(digits) == len(s)-1 && digits != "" && strings.Trim(digits, "0123456789") == ""
+}
+
+// headingFrom returns the n-th heading below line, or above it with up.
+func headingFrom(line, n int, up bool) (Heading, bool) {
+	lines, _ := sdk.Lines()
+	step := 1
+	if up {
+		step = -1
+	}
+	for l := line + step; l >= 0 && l < lines; l += step {
+		if h, ok := headingAt(l); ok {
+			if n--; n == 0 {
+				return h, true
+			}
+		}
+	}
+	return Heading{}, false
+}
+
+// parent returns the heading h is under.
+func parent(h Heading) (Heading, bool) {
+	for n := h.Line - 1; n >= 0; n-- {
+		if p, ok := headingAt(n); ok && p.Level < h.Level {
+			return p, true
+		}
+	}
+	return Heading{}, false
+}
+
+// Item is a list item's line taken apart.
+type Item struct {
+	Indent, Bullet string
+	Box            bool // it has a checkbox
+}
+
+// parseItem takes a list item's line apart. It is false for any other line.
+func parseItem(line string) (Item, bool) {
+	rest := strings.TrimLeft(line, " \t")
+	bullet, after, ok := strings.Cut(rest, " ")
+	if !ok || !isBullet(bullet) {
+		return Item{}, false
+	}
+	return Item{line[:len(line)-len(rest)], bullet, strings.HasPrefix(after, "[") && len(after) > 2 && after[2] == ']'}, true
+}
+
+// next returns the line that starts the item after it: its bullet, a
+// number one more, and an empty checkbox when it has one.
+func (it Item) next() string {
+	bullet := it.Bullet
+	if digits := strings.TrimRight(bullet, ".)"); digits != bullet {
+		n, _ := strconv.Atoi(digits)
+		bullet = strconv.Itoa(n+1) + bullet[len(digits):]
+	}
+	line := it.Indent + bullet + " "
+	if it.Box {
+		line += "[ ] "
+	}
+	return line
+}
+
+// itemEnd returns where the item that starts on line n ends: after the
+// lines under it indented more than it.
+func itemEnd(n int, it Item) int {
+	lines, _ := sdk.Lines()
+	last := n
+	for l := n + 1; l < lines; l++ {
+		_, text := lineAt(l)
+		rest := strings.TrimLeft(text, " \t")
+		if rest == "" || len(text)-len(rest) <= len(it.Indent) {
+			break
+		}
+		last = l
+	}
+	start, text := lineAt(last)
+	return start + len(text)
+}
+
+// insertLine asks for line on a line of its own after the end of a line at
+// at, the cursor at its end in insert mode.
+func insertLine(at int, line string) {
+	sdk.Do(api.Result{
+		Edits: []api.Edit{{Start: at, End: at, Text: "\n" + line}},
+		Jump:  &api.Jump{Pos: at + 1 + len(line)},
+		Keys:  "a",
+	})
 }
