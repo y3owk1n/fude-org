@@ -157,24 +157,19 @@ func sibling(h Heading, below bool) (Heading, bool) {
 	return Heading{}, false
 }
 
-// cycleTodo puts the next of the keywords todo and done on the heading h,
-// or the one before with back, in their order and then none.
-func cycleTodo(h Heading, todo, done []string, back bool) api.Edit {
-	keys := slices.Concat(todo, done)
-	head, _ := parseHead(h.Text, keys)
-	at := slices.Index(keys, head.Keyword)
-	if at < 0 {
-		at = len(keys)
-	}
-	step := 1
-	if back {
-		step = len(keys)
-	}
-	head.Keyword = ""
-	if next := (at + step) % (len(keys) + 1); next < len(keys) {
-		head.Keyword = keys[next]
-	}
-	return api.Edit{Start: h.Start, End: h.Start + len(h.Text), Text: head.String()}
+// cycleTodo puts the next keyword on the heading h, or the one before with
+// back, as setKeyword does.
+func cycleTodo(h Heading, back bool) {
+	t, d := bufferKeys()
+	f, end := front(h)
+	setKeyword(&f, nextKeyword(f.Head.Keyword, t, d, back), t, d, sdk.Now(), logDone())
+	putFront(h, f, end)
+}
+
+// logDone reports whether a heading that is done gets a CLOSED date.
+func logDone() bool {
+	v, _ := sdk.Option("fude-org.log_done")
+	return v != "false"
 }
 
 // bufferKeys returns the TODO keywords of the buffer the call is about, as

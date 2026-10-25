@@ -27,10 +27,11 @@ type step struct {
 // applied returns text with the edits res asks for made.
 func applied(text string, res api.Result) string { return plugintest.Apply(text, res) }
 
-// run runs each step and checks the text its edits leave.
+// run runs each step and checks the text its edits leave, with no CLOSED
+// dates.
 func run(t *testing.T, steps []step) {
 	t.Helper()
-	p := load(t, plugin.Grants{})
+	p := load(t, plugin.Grants{Options: map[string]string{"log_done": "false"}})
 	for _, s := range steps {
 		if got := plugintest.Apply(s.text, p.Key(s.keys, s.text, s.at, 0)); got != s.want {
 			t.Errorf("%s on %q left %q, want %q", s.keys, s.text, got, s.want)

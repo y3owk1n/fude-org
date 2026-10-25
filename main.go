@@ -38,6 +38,7 @@ var todo, done []string
 
 func init() {
 	sdk.Define("todo", "TODO | DONE", "the TODO keywords, those after | done, as #+TODO lists them")
+	sdk.Define("log_done", "true", "a heading that is done gets a CLOSED date")
 	todo, done = keywords()
 	q := highlights + "(item . (expr) @keyword (#any-of? @keyword " + quoted(todo) + "))\n"
 	q += "(item . (expr) @comment (#any-of? @comment " + quoted(done) + "))\n"
@@ -54,14 +55,12 @@ func init() {
 	})
 	key("todo_next", "cit", "puts the next TODO keyword on the heading", func(c sdk.Call) {
 		if h, ok := heading(c.Cursor); ok {
-			t, d := bufferKeys()
-			edit(cycleTodo(h, t, d, false))
+			cycleTodo(h, false)
 		}
 	})
 	key("todo_prev", "ciT", "puts the TODO keyword before on the heading", func(c sdk.Call) {
 		if h, ok := heading(c.Cursor); ok {
-			t, d := bufferKeys()
-			edit(cycleTodo(h, t, d, true))
+			cycleTodo(h, true)
 		}
 	})
 	key("checkbox", "<C-Space>", "ticks the checkbox of the list item, or clears it", func(c sdk.Call) {
@@ -155,14 +154,12 @@ func init() {
 	})
 	key("shift_right", "<S-Right>", "moves the timestamp under the cursor a day later, or puts the next TODO keyword on the heading", func(c sdk.Call) {
 		if h, ok := heading(c.Cursor); !shiftStamp(c.Cursor, max(c.Count, 1), true) && ok {
-			t, d := bufferKeys()
-			edit(cycleTodo(h, t, d, false))
+			cycleTodo(h, false)
 		}
 	})
 	key("shift_left", "<S-Left>", "moves the timestamp under the cursor a day earlier, or puts the TODO keyword before on the heading", func(c sdk.Call) {
 		if h, ok := heading(c.Cursor); !shiftStamp(c.Cursor, -max(c.Count, 1), true) && ok {
-			t, d := bufferKeys()
-			edit(cycleTodo(h, t, d, true))
+			cycleTodo(h, true)
 		}
 	})
 	key("increment", "<C-a>", "moves the part of the timestamp under the cursor later, n of its unit", func(c sdk.Call) {

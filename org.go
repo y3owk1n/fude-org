@@ -408,3 +408,72 @@ func (st Stamp) unitAt(rel int) byte {
 	}
 	return 'd'
 }
+
+// nextKeyword returns the keyword after cur in todo and done, or the one
+// before with back, in their order and then none.
+func nextKeyword(cur string, todo, done []string, back bool) string {
+	keys := slices.Concat(todo, done)
+	at := slices.Index(keys, cur)
+	if at < 0 {
+		at = len(keys)
+	}
+	step := 1
+	if back {
+		step = len(keys)
+	}
+	if next := (at + step) % (len(keys) + 1); next < len(keys) {
+		return keys[next]
+	}
+	return ""
+}
+
+// setKeyword puts keyword on f as org does, now being the local time. A
+// done keyword closes it when log is set, or, when a date of its planning
+// line repeats, moves those dates on, keeps its TODO keyword and notes when
+// in LAST_REPEAT. A keyword that is not done opens it again.
+func setKeyword(f *Front, keyword string, todo, done []string, now time.Time, log bool) {
+	was := f.Head.Keyword
+	f.Head.Keyword = keyword
+	at := Stamp{Day: time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC), Time: now.Format("15:04")}
+	switch {
+	case !slices.Contains(done, keyword):
+		f.Plan.Closed = nil
+	case slices.Contains(done, was):
+	case repeat(&f.Plan, at.Day):
+		f.Head.Keyword = was
+		if !slices.Contains(todo, was) && len(todo) > 0 {
+			f.Head.Keyword = todo[0]
+		}
+		f.setProp("LAST_REPEAT", at.String())
+	case log:
+		f.Plan.Closed = &at
+	}
+}
+
+// repeat moves on each date of p that repeats, from today, and reports
+// whether one did. +1w moves a date a week, ++1w as many weeks as take it
+// past today, and .+1w to a week from today.
+func repeat(p *Plan, today time.Time) bool {
+	moved := false
+	for _, st := range []*Stamp{p.Deadline, p.Scheduled} {
+		if st == nil || st.Repeat == "" {
+			continue
+		}
+		n, unit, ok := interval(st.Repeat)
+		if !ok || n <= 0 {
+			continue
+		}
+		switch {
+		case strings.HasPrefix(st.Repeat, "++"):
+			for *st = st.add(n, unit); !st.Day.After(today); *st = st.add(n, unit) {
+			}
+		case strings.HasPrefix(st.Repeat, ".+"):
+			st.Day = today
+			*st = st.add(n, unit)
+		default:
+			*st = st.add(n, unit)
+		}
+		moved = true
+	}
+	return moved
+}

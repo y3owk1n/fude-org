@@ -215,22 +215,26 @@ func shownAt(pos int) (*Entry, bool) {
 	return scan.shown[n], true
 }
 
-// todoIn puts the next TODO keyword on e's heading in its file, and shows
-// the agenda again.
+// todoIn puts the next TODO keyword on e's heading in its file, as
+// setKeyword does, and shows the agenda again.
 func todoIn(e *Entry) error {
 	text, err := sdk.ReadFile(e.Path)
 	if err != nil {
 		return fmt.Errorf("read %s: %w", e.Path, err)
 	}
 	lines := strings.SplitAfter(text, "\n")
-	if e.Line >= len(lines) {
+	if e.Line >= len(lines) || level(lines[e.Line]) == 0 {
 		return fmt.Errorf("%s changed since the agenda read it", e.Path)
 	}
 	start := len(strings.Join(lines[:e.Line], ""))
-	line := strings.TrimSuffix(lines[e.Line], "\n")
 	t, d := keywordsIn(text, todo, done)
-	ed := cycleTodo(Heading{e.Line, start, level(line), line}, t, d, false)
-	if err := sdk.WriteFile(e.Path, text[:ed.Start]+ed.Text+text[ed.End:]); err != nil {
+	f, used := parseFront(text[start:], slices.Concat(t, d))
+	setKeyword(&f, nextKeyword(f.Head.Keyword, t, d, false), t, d, sdk.Now(), logDone())
+	front := f.String()
+	if !strings.HasSuffix(text[start:start+used], "\n") {
+		front = strings.TrimSuffix(front, "\n")
+	}
+	if err := sdk.WriteFile(e.Path, text[:start]+front+text[start+used:]); err != nil {
 		return err
 	}
 	agenda()
