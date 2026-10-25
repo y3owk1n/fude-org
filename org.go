@@ -315,10 +315,10 @@ func keyNames(words []string) []string {
 // letters.
 var weekdays = []string{"sun", "mon", "tue", "wed", "thu", "fri", "sat"}
 
-// parseDate reads a date typed as org reads one, from today: 2026-10-25,
-// +3d, -1w, today, tomorrow or a weekday, the nearest from today, each
-// with a time such as 10:00 or 10:00-11:00, a repeater such as +1w and a
-// warning such as -2d after it.
+// parseDate reads a date typed as org reads one, counting from today. The
+// date is 2026-10-25, +3d, -1w, today, tomorrow, or a weekday, the nearest
+// one from today. A time such as 10:00, a repeater such as +1w and a
+// warning such as -2d may follow it.
 func parseDate(text string, today time.Time) (Stamp, error) {
 	words := strings.Fields(strings.ToLower(text))
 	if len(words) == 0 {
@@ -427,10 +427,11 @@ func nextKeyword(cur string, todo, done []string, back bool) string {
 	return ""
 }
 
-// setKeyword puts keyword on f as org does, now being the local time. A
-// done keyword closes it when log is set, or, when a date of its planning
-// line repeats, moves those dates on, keeps its TODO keyword and notes when
-// in LAST_REPEAT. A keyword that is not done opens it again.
+// setKeyword puts keyword on f as org does, at now, the local time. A done
+// keyword closes f when log is set. When a date of f's planning line
+// repeats, setKeyword moves that date on instead, keeps f's TODO keyword
+// and notes the time in LAST_REPEAT. A keyword that is not done opens f
+// again.
 func setKeyword(f *Front, keyword string, todo, done []string, now time.Time, log bool) {
 	was := f.Head.Keyword
 	f.Head.Keyword = keyword

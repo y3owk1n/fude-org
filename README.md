@@ -72,10 +72,9 @@ Off a heading, a list item or a timestamp, each key does what it does in
 any other file, so `<Tab>` still jumps forward, `>>` still indents and
 `<C-a>` still adds to a number.
 
-A date is asked for as org asks for one: `2026-11-02`, `+3d`, `-1w`,
-`today`, `tomorrow` or a weekday such as `fri`, each followed by a time
-such as `10:00`, a repeater such as `+1w` and a warning such as `-2d`.
-None removes the date.
+Type a date as in org: `2026-11-02`, `+3d`, `-1w`, `today`, `tomorrow` or a
+weekday such as `fri`. A time such as `10:00`, a repeater such as `+1w` and
+a warning such as `-2d` may follow it. An empty answer removes the date.
 
 A heading put to a done keyword gets `CLOSED:` with the time. One whose
 `SCHEDULED:` or `DEADLINE:` date repeats moves that date on instead and
