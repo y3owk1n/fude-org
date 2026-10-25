@@ -73,6 +73,7 @@ In an org file:
 | `<Leader>op`, `<Leader>oP` | sets a property in the section's drawer, or removes one |
 | `<Leader>os`, `<Leader>od` | asks when the section is scheduled or due |
 | `<Leader>o.`, `<Leader>o!` | puts an active or an inactive timestamp at the cursor |
+| `<Leader>o/` | asks for text and folds the file to show the lines that hold it and the headings over them |
 | `<Leader>o#` | counts again what the section's `[/]` and `[%]` count |
 | `<CR>` | follows the link under the cursor, or goes to the footnote's definition |
 | `<Leader>of` | goes from a footnote to its definition and back, or adds a footnote at the cursor, its definition under `* Footnotes` |
@@ -102,6 +103,11 @@ A `[/]` or `[%]` in a heading counts the checkboxes in its text, or with
 none, its children with a TODO keyword. In a list item it counts the
 checkboxes of the items under it. `<C-Space>` and `cit` count again as they
 change one.
+
+A sparse tree closes every fold with `zM` and opens, with `zv`, those that
+hide a matching line, so `zR` shows everything again. A section opened
+to reach a match shows its own text too, where org would hide it, as a
+fude fold holds a section whole.
 
 A table's column is to the right when more than half its cells are
 numbers. Its formulas are org's: `$4=$2*$3` sets a column under the first
@@ -177,7 +183,7 @@ Set them in the table's `options`, such as
 
 ## Not yet
 
-Column view, sparse trees, narrowing,
+Column view, narrowing,
 custom agenda views, export, code blocks, citations and
 attachments.
 

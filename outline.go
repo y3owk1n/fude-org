@@ -435,3 +435,28 @@ func insertStamp(cursor int, active bool) {
 		return nil
 	})
 }
+
+// sparse closes every fold and opens those that hide a line holding text,
+// as fude's zM and zv do, so the outline shows those lines and the
+// headings over them. Case does not matter.
+func sparse(text string) error {
+	n, _ := sdk.Len()
+	all, _ := sdk.Text(0, n)
+	needle := strings.ToLower(strings.TrimSpace(text))
+	keys := "zM"
+	count, first := 0, 0
+	for i, line := range strings.Split(all, "\n") {
+		if needle != "" && strings.Contains(strings.ToLower(line), needle) {
+			if count == 0 {
+				first = i
+			}
+			count++
+			keys += ":" + strconv.Itoa(i+1) + "<CR>zv"
+		}
+	}
+	if count == 0 {
+		return errNotFound("line that holds " + text)
+	}
+	keys += ":" + strconv.Itoa(first+1) + "<CR>"
+	return sdk.Do(api.Result{Keys: keys, Message: strconv.Itoa(count) + " lines hold " + text})
+}

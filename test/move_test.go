@@ -62,3 +62,15 @@ func TestInsert(t *testing.T) {
 		}
 	}
 }
+
+func TestSparse(t *testing.T) {
+	p := load(t, plugin.Grants{})
+	text := "* Home\nmilk\n** Kitchen\nfix tap\n* Work\n** Meetings\nMilk run"
+	_, res := answer(t, p, "<Leader>o/", text, 0, "milk")
+	if res.Keys != "zM:2<CR>zv:7<CR>zv:2<CR>" || res.Message != "2 lines hold milk" {
+		t.Errorf("<Leader>o/ milk ran %q and said %q", res.Keys, res.Message)
+	}
+	if _, res := answer(t, p, "<Leader>o/", text, 0, "bread"); res.Error == "" || res.Keys != "" {
+		t.Errorf("<Leader>o/ bread asked for %+v", res)
+	}
+}
