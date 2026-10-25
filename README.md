@@ -49,8 +49,11 @@ In an org file:
 
 | Keys | What they do |
 |---|---|
-| `<Tab>` | on a heading, steps its section from closed, to open with its subheadings closed, to all open |
-| `<S-Tab>` | steps the file from top headings, to every heading, to everything |
+| `<Tab>` | on a heading, steps its section from closed, to open with its subheadings closed, to all open. In a table, in insert mode too, aligns it and goes to the next cell, adding a row past the last |
+| `<S-Tab>` | steps the file from top headings, to every heading, to everything. In a table it goes to the cell before |
+| `<Leader>o\|` | aligns the table, or makes the line one, its cells separated by commas or tabs |
+| `<Leader>o-` | adds a rule under the table's row |
+| `<Leader>o=` | works out the formulas of the `#+TBLFM:` line under the table |
 | `cit`, `ciT` | puts the next or the previous TODO keyword on the heading |
 | `<C-Space>` | ticks the list item's checkbox, or clears it |
 | `>>`, `<<` | adds a star to the heading, or takes one off |
@@ -94,6 +97,13 @@ A `[/]` or `[%]` in a heading counts the checkboxes in its text, or with
 none, its children with a TODO keyword. In a list item it counts the
 checkboxes of the items under it. `<C-Space>` and `cit` count again as they
 change one.
+
+A table's column is to the right when more than half its cells are
+numbers. Its formulas are org's: `$4=$2*$3` sets a column under the first
+rule, and `@4$2=vsum(@2..@3)` one field. A formula knows `+ - * / ^`,
+brackets, `$c`, `@r`, `@r$c`, `@<` and `@>` for the first and last row,
+`@-1` for the row above, and `vsum`, `vmean`, `vmin`, `vmax` and `vcount`
+of a range. Rows count past rules, as in org.
 
 A link is `[[target][description]]` or `[[target]]`. Away from the
 cursor's line it shows only its description, or its target when it has
@@ -155,7 +165,7 @@ Set them in the table's `options`, such as
 
 ## Not yet
 
-Clocking, tables, column view, footnotes, sparse trees, narrowing, ID
+Clocking, column view, footnotes, sparse trees, narrowing, ID
 links, custom agenda views, export, code blocks, citations and
 attachments.
 

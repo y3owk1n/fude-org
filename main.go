@@ -45,14 +45,29 @@ func init() {
 	grammar.Queries = map[string]string{"highlights": q, "folds": "(section) @fold"}
 	sdk.Register(api.Registration{Kind: api.Language, Name: "org", Help: "the org grammar", Source: &grammar}, func(_, _, _ int) int { return 0 })
 
-	key("cycle", "<Tab>", "on a heading, opens or closes its section as <Plug>(fold.cycle) does", func(c sdk.Call) {
+	key("cycle", "<Tab>", "on a heading, opens or closes its section as <Plug>(fold.cycle) does, and in a table aligns it and goes to the next cell", func(c sdk.Call) {
 		if _, ok := heading(c.Cursor); ok {
 			sdk.Do(api.Result{Keys: "<Plug>(fold.cycle)"})
+		} else {
+			moveCell(c.Cursor, false)
 		}
 	})
-	key("cycle_all", "<S-Tab>", "shows the outline, then every heading, then everything, as <Plug>(fold.cycle_all) does", func(sdk.Call) {
-		sdk.Do(api.Result{Keys: "<Plug>(fold.cycle_all)"})
+	key("cycle_all", "<S-Tab>", "in a table aligns it and goes to the cell before, and elsewhere shows the outline, then every heading, then everything", func(c sdk.Call) {
+		if !moveCell(c.Cursor, true) {
+			sdk.Do(api.Result{Keys: "<Plug>(fold.cycle_all)"})
+		}
 	})
+	for _, k := range []string{"<Tab>", "<S-Tab>"} {
+		sdk.Register(api.Registration{Kind: api.Typed, Name: k, Help: "in an org table, aligns it and goes to the next cell, or the one before"}, func(cursor, _, _ int) int {
+			if sdk.Current().Filetype == "org" {
+				moveCell(cursor, k == "<S-Tab>")
+			}
+			return 0
+		})
+	}
+	key("table", "<Leader>o|", "aligns the table, or makes the line one, its cells apart by commas or tabs", func(c sdk.Call) { alignTable(c.Cursor) })
+	key("table_rule", "<Leader>o-", "adds a rule under the table's row", func(c sdk.Call) { addRule(c.Cursor) })
+	key("table_calc", "<Leader>o=", "works out the formulas of the #+TBLFM: line under the table", func(c sdk.Call) { report(recalc(c.Cursor)) })
 	key("todo_next", "cit", "puts the next TODO keyword on the heading", func(c sdk.Call) {
 		if h, ok := heading(c.Cursor); ok {
 			cycleTodo(c.Cursor, h, false)
