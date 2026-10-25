@@ -67,7 +67,11 @@ func follow(cursor int) bool {
 	start, text := lineAt(n)
 	for _, l := range links(text) {
 		if cursor-start >= l.Start && cursor-start < l.End {
-			report(open(l.Target))
+			if name, ok := strings.CutPrefix(l.Target, "attachment:"); ok {
+				report(openAttachment(cursor, name))
+			} else {
+				report(open(l.Target))
+			}
 			return true
 		}
 	}

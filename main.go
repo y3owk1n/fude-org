@@ -279,6 +279,7 @@ func init() {
 	key("columns", "<Leader>oC", "shows the section's headings, or the file's, with the columns of its #+COLUMNS: line", func(c sdk.Call) { columnView(c.Cursor) })
 	sdk.Define("bibliography", "", "BibTeX files every org file cites from, separated by spaces, besides those its #+bibliography: lines name")
 	key("cite", "<Leader>o@", "asks for an entry of the bibliographies and cites it at the cursor, or adds it to the citation there", func(c sdk.Call) { report(cite(c.Cursor)) })
+	key("attachments", "<Leader>oA", "asks whether to attach a file to the section's heading or open one of its attachments", func(c sdk.Call) { attachments(c.Cursor) })
 	sdk.Define("pandoc", "pandoc", "the program export runs, which the plugin's programs must hold")
 	sdk.Command("OrgExport", "writes the buffer beside its file in a format with pandoc: html, md, pdf, docx, odt, latex, epub or txt", func(c sdk.Call) { report(export(c.Args)) })
 	sdk.Key("export", "<Leader>oE", "asks for a format and writes the buffer beside its file in it with pandoc", func(sdk.Call) { pickExport() })

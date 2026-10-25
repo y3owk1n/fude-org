@@ -83,6 +83,7 @@ In an org file:
 | `<Leader>o'` | opens the source block in a buffer of its language, which `:w` writes back |
 | `<Leader>o#` | counts again what the section's `[/]` and `[%]` count |
 | `<CR>` | follows the link under the cursor, opens the entry of the citation key, or goes to the footnote's definition |
+| `<Leader>oA` | asks whether to attach a file to the section's heading or to open one of its attachments |
 | `<Leader>o@` | asks for an entry of the bibliographies and cites it at the cursor, or adds it to the citation there |
 | `<Leader>of` | goes from a footnote to its definition and back, or adds a footnote at the cursor, its definition under `* Footnotes` |
 | `<Leader>oxi`, `<Leader>oxo` | clocks in the section's heading, clocking out the clock running, or clocks out |
@@ -123,6 +124,13 @@ Column view's columns come from `#+COLUMNS:`, such as
 `TAGS` or a property, with its title in brackets. `{+}` sums the numbers
 of a heading's children and `{:}` their times. `<CR>` on a row goes to its
 heading.
+
+Attachments go in `data/` beside the org file, under the first two
+characters of the heading's `:ID:` and then the rest, as org keeps them.
+Attaching a file copies it there, gives the heading an `:ID:` when it has
+none, and tags it `ATTACH`. Org and text attachments open in fude, and
+any other with the opener. `[[attachment:name]]` opens one of the
+attachments of the heading it is under.
 
 A citation is org's, `[cite:@key]` or `[cite/style:@a;@b]`. Its entries
 come from the BibTeX files of the file's `#+bibliography:` lines, beside
@@ -226,7 +234,12 @@ Set them in the table's `options`, such as
 
 ## Not yet
 
-Attachments.
+The plugin covers what org is used for day to day, not all of it. Source
+blocks take no `:var`, `:session` or `:dir`, and only `:tangle` among
+header arguments. Export goes through pandoc, of the whole file. The only
+dynamic block is the clock table. There are no habits, inline tasks,
+agenda filters or bulk actions, encrypted entries, MobileOrg, or ways to
+attach other than copying.
 
 ## Check
 
