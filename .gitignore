@@ -1,2 +1,3 @@
 *.wasm
 demos/out/
+.DS_Store
