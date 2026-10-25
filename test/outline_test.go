@@ -74,6 +74,13 @@ func TestTodo(t *testing.T) {
 	})
 }
 
+func TestTodoList(t *testing.T) {
+	p := load(t, plugin.Grants{Options: map[string]string{"todo": "TODO,NEXT,|,DONE"}})
+	if got := applied("* TODO Call", p.Key("cit", "* TODO Call", 0, 0)); got != "* NEXT Call" {
+		t.Errorf("cit left %q, want * NEXT Call", got)
+	}
+}
+
 func TestCheckbox(t *testing.T) {
 	run(t, []step{
 		{"<C-Space>", "- [ ] one", 0, "- [X] one"},

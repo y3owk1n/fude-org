@@ -29,6 +29,11 @@ func TestRunBlock(t *testing.T) {
 	if res := p.Key("<Leader>obe", "#+BEGIN_SRC sh\necho hi\n#+END_SRC", 16, 0); !slices.Equal(res.Jobs[0].Argv, []string{"sh"}) || res.Jobs[0].Input != "echo hi\n" {
 		t.Errorf("<Leader>obe ran %+v", res.Jobs[0])
 	}
+	// fude joins a list in config.toml with commas.
+	p = load(t, plugin.Grants{Programs: []string{"bash"}, Options: map[string]string{"languages": "sh=bash,python=python3"}})
+	if res := p.Key("<Leader>obe", "#+BEGIN_SRC sh\necho hi\n#+END_SRC", 16, 0); len(res.Jobs) != 1 || !slices.Equal(res.Jobs[0].Argv, []string{"bash"}) {
+		t.Errorf("<Leader>obe with a list of languages ran %+v, %s", res.Jobs, res.Error)
+	}
 	for _, text := range []string{"#+BEGIN_SRC cobol\nx\n#+END_SRC", "no block"} {
 		if res := p.Key("<Leader>obe", text, 2, 0); res.Error == "" {
 			t.Errorf("<Leader>obe in %q said nothing", text)

@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/y3owk1n/fude/api"
 	"github.com/y3owk1n/fude/sdk"
@@ -284,7 +285,7 @@ func init() {
 	key("tangle", "<Leader>obt", "writes each source block with :tangle path to that file", func(sdk.Call) { report(tangle()) })
 	key("edit_block", "<Leader>o'", "opens the source block in a buffer of its language, which :w writes back", func(c sdk.Call) { report(editBlock(c.Cursor)) })
 	key("columns", "<Leader>oC", "shows the section's headings, or the file's, with the columns of its #+COLUMNS: line", func(c sdk.Call) { columnView(c.Cursor) })
-	sdk.Define("bibliography", "", "BibTeX files every org file cites from, separated by spaces, besides those its #+bibliography: lines name")
+	sdk.Define("bibliography", "", "BibTeX files every org file cites from, separated by spaces or commas, besides those its #+bibliography: lines name")
 	key("cite", "<Leader>o@", "asks for an entry of the bibliographies and cites it at the cursor, or adds it to the citation there", func(c sdk.Call) { report(cite(c.Cursor)) })
 	key("attachments", "<Leader>oA", "asks whether to attach a file to the section's heading or open one of its attachments", func(c sdk.Call) { attachments(c.Cursor) })
 	sdk.Define("pandoc", "pandoc", "the program export runs, which the plugin's programs must hold")
@@ -543,7 +544,13 @@ func key(name, keys, help string, f func(sdk.Call)) {
 // line would.
 func keywords() ([]string, []string) {
 	v, _ := sdk.Option("fude-org.todo")
-	return keywordsIn("#+TODO: "+v, nil, nil)
+	return keywordsIn("#+TODO: "+strings.Join(items(v), " "), nil, nil)
+}
+
+// items splits an option's words at spaces and commas. fude joins a list
+// in config.toml with commas.
+func items(v string) []string {
+	return strings.FieldsFunc(v, func(r rune) bool { return r == ',' || unicode.IsSpace(r) })
 }
 
 // quoted returns words as a query's strings, each quoted.

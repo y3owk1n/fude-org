@@ -35,7 +35,7 @@ func bibliographies() []string {
 		}
 	}
 	v, _ := sdk.Option("fude-org.bibliography")
-	return append(out, strings.Fields(v)...)
+	return append(out, items(v)...)
 }
 
 // cutFold is strings.CutPrefix with any case.

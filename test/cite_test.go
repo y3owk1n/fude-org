@@ -41,4 +41,14 @@ func TestCite(t *testing.T) {
 	if argv := res.Jobs[0].Argv; !slices.Contains(argv, "--citeproc") || argv[len(argv)-1] != filepath.Join(dir, "refs.bib") {
 		t.Errorf("export ran %q", argv)
 	}
+	// fude joins a list in config.toml with commas.
+	other := filepath.Join(dir, "other.bib")
+	if err := os.WriteFile(other, []byte("@book{lamport94,\n  author = {Leslie Lamport},\n  title = {LaTeX},\n  year = {1994},\n}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	p = load(t, plugin.Grants{Paths: []string{dir}, Programs: []string{"pandoc"}, Options: map[string]string{"bibliography": filepath.Join(dir, "refs.bib") + "," + other}})
+	p.Path = filepath.Join(dir, "a.org")
+	if res := p.Key("<Leader>o@", "As shown ", 9, 0); res.Pick == nil || len(res.Pick.Items) != 3 {
+		t.Errorf("<Leader>o@ with a list of bibliographies offered %+v", res.Pick)
+	}
 }

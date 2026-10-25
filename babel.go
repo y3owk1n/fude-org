@@ -67,7 +67,7 @@ func parseBlock(lines []string, b, e int) Block {
 // program returns the program the languages option runs lang with.
 func program(lang string) (string, bool) {
 	v, _ := sdk.Option("fude-org.languages")
-	for _, pair := range strings.Fields(v) {
+	for _, pair := range items(v) {
 		if name, prog, ok := strings.Cut(pair, "="); ok && name == lang {
 			return prog, true
 		}

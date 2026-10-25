@@ -233,6 +233,10 @@ Set them in the table's `options`, such as
 `options = { directory = "~/notes" }`, or with
 `:set fude-org.directory ~/notes`.
 
+`todo`, `bibliography` and `languages` take words separated by spaces or
+commas. A fude newer than v0.3.1 also takes a list for each in `options`,
+such as `languages = ["sh=sh", "python=python3"]`.
+
 | Option | Default | What it is |
 |---|---|---|
 | `todo` | `TODO \| DONE` | the TODO keywords, those after `\|` done, for files with no `#+TODO:` line. The plugin reads it when it loads. |
@@ -241,7 +245,7 @@ Set them in the table's `options`, such as
 | `directory` | `~/org` | the folder the agenda reads, which `paths` must hold |
 | `views` | none | the agenda's own views, a line each: a key and a view |
 | `pandoc` | `pandoc` | the program export runs, which `programs` must hold |
-| `bibliography` | none | BibTeX files every org file cites from, separated by spaces |
+| `bibliography` | none | BibTeX files every org file cites from |
 | `languages` | `sh=sh bash=bash python=python3 js=node ruby=ruby` | the program that runs each language's source blocks, which `programs` must hold |
 | `templates` | `t inbox.org * TODO %?` | the capture templates, a line each |
 
