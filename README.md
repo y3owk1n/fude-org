@@ -74,7 +74,8 @@ In an org file:
 | `<Leader>os`, `<Leader>od` | asks when the section is scheduled or due |
 | `<Leader>o.`, `<Leader>o!` | puts an active or an inactive timestamp at the cursor |
 | `<Leader>o#` | counts again what the section's `[/]` and `[%]` count |
-| `<CR>` | follows the link under the cursor |
+| `<CR>` | follows the link under the cursor, or goes to the footnote's definition |
+| `<Leader>of` | goes from a footnote to its definition and back, or adds a footnote at the cursor, its definition under `* Footnotes` |
 | `<Leader>oxi`, `<Leader>oxo` | clocks in the section's heading, clocking out the clock running, or clocks out |
 | `<Leader>oxq`, `<Leader>oxj` | cancels the clock running, or goes to its heading |
 | `<Leader>oxr` | puts a clock table of the file at the cursor, or writes the one the cursor is in again |
@@ -174,7 +175,7 @@ Set them in the table's `options`, such as
 
 ## Not yet
 
-Column view, footnotes, sparse trees, narrowing, ID
+Column view, sparse trees, narrowing, ID
 links, custom agenda views, export, code blocks, citations and
 attachments.
 

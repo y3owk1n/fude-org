@@ -241,7 +241,12 @@ func init() {
 		})
 	})
 	sdk.Define("opener", "open", "the program that opens a web link, open on macOS and xdg-open on Linux, which the plugin's programs must hold")
-	key("follow", "<CR>", "follows the link under the cursor: a heading, a file, or a web link with the opener", func(c sdk.Call) { follow(c.Cursor) })
+	key("follow", "<CR>", "follows the link under the cursor: a heading, a file, or a web link with the opener, or goes to the footnote's definition", func(c sdk.Call) {
+		if !follow(c.Cursor) {
+			footnote(c.Cursor, true)
+		}
+	})
+	key("footnote", "<Leader>of", "goes from a footnote to its definition and back, or adds one at the cursor", func(c sdk.Call) { footnote(c.Cursor, false) })
 	key("store_link", "<Leader>ols", "stores a link to the section's heading for <Leader>oli", func(c sdk.Call) { report(store(c.Cursor)) })
 	key("insert_link", "<Leader>oli", "asks for a link, from the one stored, and a description, and puts it at the cursor", func(c sdk.Call) { insertLink(c.Cursor) })
 	sdk.On("buffer.opened", func(sdk.Event) { showLinks() })
