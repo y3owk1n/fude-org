@@ -67,7 +67,7 @@ func init() {
 			return 0
 		})
 	}
-	key("table", "<Leader>o|", "aligns the table, or makes the line one, its cells apart by commas or tabs", func(c sdk.Call) { alignTable(c.Cursor) })
+	key("table", "<Leader>o|", "aligns the table, or makes the line one, its cells separated by commas or tabs", func(c sdk.Call) { alignTable(c.Cursor) })
 	key("table_rule", "<Leader>o-", "adds a rule under the table's row", func(c sdk.Call) { addRule(c.Cursor) })
 	key("table_calc", "<Leader>o=", "works out the formulas of the #+TBLFM: line under the table", func(c sdk.Call) { report(recalc(c.Cursor)) })
 	key("todo_next", "cit", "puts the next TODO keyword on the heading", func(c sdk.Call) {

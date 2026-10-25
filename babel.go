@@ -13,12 +13,13 @@ import (
 )
 
 // Block is a source block: its language, its header arguments by name,
-// such as :tangle, and its text, and its lines in the buffer.
+// such as :tangle, its text, the lines of its #+BEGIN_SRC and #+END_SRC,
+// and its #+BEGIN_SRC line, which finds it again.
 type Block struct {
 	Lang       string
 	Args       map[string]string
 	Text       string
-	Begin, End int // the lines of #+BEGIN_SRC and #+END_SRC
+	Begin, End int
 	BeginLine  string
 }
 
