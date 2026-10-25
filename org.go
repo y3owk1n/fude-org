@@ -478,3 +478,100 @@ func repeat(p *Plan, today time.Time) bool {
 	}
 	return moved
 }
+
+// cookie returns where the statistics cookie in s, such as [2/3], [/],
+// [66%] or [%], starts and ends, and whether it counts in percent.
+func cookie(s string) (int, int, bool, bool) {
+	for i := strings.IndexByte(s, '['); i >= 0; {
+		end := strings.IndexByte(s[i:], ']')
+		if end < 0 {
+			break
+		}
+		inside := s[i+1 : i+end]
+		digits := strings.Trim(inside, "0123456789")
+		if digits == "/" || digits == "%" && strings.HasSuffix(inside, "%") {
+			return i, i + end + 1, digits == "%", true
+		}
+		next := strings.IndexByte(s[i+1:], '[')
+		if next < 0 {
+			break
+		}
+		i += next + 1
+	}
+	return 0, 0, false, false
+}
+
+// recount writes the counts of the cookies in the subtree text of a
+// heading of level: on its heading line, of the checkboxes in its own text
+// or else of its children's TODO keywords, and on its list items, of the
+// checkboxes of the items under each.
+func recount(text string, lvl int, todo, done []string) string {
+	lines := strings.Split(text, "\n")
+	own := len(lines)
+	for i, l := range lines[1:] {
+		if level(l) > 0 {
+			own = i + 1
+			break
+		}
+	}
+	keys := slices.Concat(todo, done)
+	count := func(i int) (int, int) {
+		if i == 0 {
+			if n, total := boxes(lines[1:own], -1); total > 0 {
+				return n, total
+			}
+			n, total := 0, 0
+			for _, l := range lines[own:] {
+				if h, ok := parseHead(l, keys); ok && h.Level == lvl+1 && h.Keyword != "" {
+					total++
+					if slices.Contains(done, h.Keyword) {
+						n++
+					}
+				}
+			}
+			return n, total
+		}
+		it, _ := parseItem(lines[i])
+		return boxes(lines[i+1:own], len(it.Indent))
+	}
+	for i := range own {
+		start, end, percent, ok := cookie(lines[i])
+		if _, item := parseItem(lines[i]); !ok || i > 0 && !item {
+			continue
+		}
+		n, total := count(i)
+		c := fmt.Sprintf("[%d/%d]", n, total)
+		if percent {
+			c = fmt.Sprintf("[%d%%]", n*100/max(total, 1))
+		}
+		lines[i] = lines[i][:start] + c + lines[i][end:]
+	}
+	return strings.Join(lines, "\n")
+}
+
+// boxes counts the ticked checkboxes and all of them among the items of
+// lines nearest under an item indented by indent, or every item for -1,
+// up to the first line indented no more than it.
+func boxes(lines []string, indent int) (int, int) {
+	n, total, under := 0, 0, -1
+	for _, l := range lines {
+		rest := strings.TrimLeft(l, " \t")
+		if rest == "" {
+			continue
+		}
+		depth := len(l) - len(rest)
+		if indent >= 0 && depth <= indent {
+			break
+		}
+		it, ok := parseItem(l)
+		if !ok || !it.Box || indent >= 0 && under >= 0 && depth != under {
+			continue
+		}
+		under = depth
+		total++
+		if strings.HasPrefix(rest[len(it.Bullet)+1:], "[X]") || strings.HasPrefix(rest[len(it.Bullet)+1:], "[x]") {
+			n++
+		}
+	}
+	return n, total
+}

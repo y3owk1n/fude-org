@@ -67,6 +67,7 @@ In an org file:
 | `<Leader>op`, `<Leader>oP` | sets a property in the section's drawer, or removes one |
 | `<Leader>os`, `<Leader>od` | asks when the section is scheduled or due |
 | `<Leader>o.`, `<Leader>o!` | puts an active or an inactive timestamp at the cursor |
+| `<Leader>o#` | counts again what the section's `[/]` and `[%]` count |
 
 Off a heading, a list item or a timestamp, each key does what it does in
 any other file, so `<Tab>` still jumps forward, `>>` still indents and
@@ -81,6 +82,11 @@ A heading put to a done keyword gets `CLOSED:` with the time. One whose
 keeps its TODO keyword: `+1w` a week, `++1w` past today, `.+1w` a week from
 today. `LAST_REPEAT` notes when. A file's own `#+TODO:` line sets its
 keywords.
+
+A `[/]` or `[%]` in a heading counts the checkboxes in its text, or with
+none, its children with a TODO keyword. In a list item it counts the
+checkboxes of the items under it. `<C-Space>` and `cit` count again as they
+change one.
 
 Anywhere:
 
@@ -109,7 +115,7 @@ Set them in the table's `options`, such as
 
 The agenda lists TODO headings, and headings with a `SCHEDULED:` or
 `DEADLINE:` date on the line after them. It has no week view, clocking,
-tags view or custom views. There are no links, checkbox counts, refile,
+tags view or custom views. There are no links, refile,
 archive, capture templates, tables, export or code blocks yet.
 
 ## Check

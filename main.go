@@ -55,18 +55,33 @@ func init() {
 	})
 	key("todo_next", "cit", "puts the next TODO keyword on the heading", func(c sdk.Call) {
 		if h, ok := heading(c.Cursor); ok {
-			cycleTodo(h, false)
+			cycleTodo(c.Cursor, h, false)
 		}
 	})
 	key("todo_prev", "ciT", "puts the TODO keyword before on the heading", func(c sdk.Call) {
 		if h, ok := heading(c.Cursor); ok {
-			cycleTodo(h, true)
+			cycleTodo(c.Cursor, h, true)
 		}
 	})
-	key("checkbox", "<C-Space>", "ticks the checkbox of the list item, or clears it", func(c sdk.Call) {
+	key("checkbox", "<C-Space>", "ticks the checkbox of the list item, or clears it, and counts the section's checkboxes again", func(c sdk.Call) {
 		n, _ := sdk.LineOf(c.Cursor)
-		if e, ok := checkbox(lineAt(n)); ok {
+		e, ok := checkbox(lineAt(n))
+		if !ok {
+			return
+		}
+		h, ok := owner(c.Cursor)
+		if !ok {
 			edit(e)
+			return
+		}
+		counted(c.Cursor, h, func(sub string) string {
+			at := e.Start - h.Start
+			return sub[:at] + e.Text + sub[e.End-h.Start:]
+		})
+	})
+	key("count", "<Leader>o#", "counts again the checkboxes and TODOs the section's [/] and [%] count", func(c sdk.Call) {
+		if h, ok := owner(c.Cursor); ok {
+			counted(c.Cursor, h, func(sub string) string { return sub })
 		}
 	})
 	key("promote", "<<", "takes a star off the heading", func(c sdk.Call) {
@@ -154,12 +169,12 @@ func init() {
 	})
 	key("shift_right", "<S-Right>", "moves the timestamp under the cursor a day later, or puts the next TODO keyword on the heading", func(c sdk.Call) {
 		if h, ok := heading(c.Cursor); !shiftStamp(c.Cursor, max(c.Count, 1), true) && ok {
-			cycleTodo(h, false)
+			cycleTodo(c.Cursor, h, false)
 		}
 	})
 	key("shift_left", "<S-Left>", "moves the timestamp under the cursor a day earlier, or puts the TODO keyword before on the heading", func(c sdk.Call) {
 		if h, ok := heading(c.Cursor); !shiftStamp(c.Cursor, -max(c.Count, 1), true) && ok {
-			cycleTodo(h, true)
+			cycleTodo(c.Cursor, h, true)
 		}
 	})
 	key("increment", "<C-a>", "moves the part of the timestamp under the cursor later, n of its unit", func(c sdk.Call) {

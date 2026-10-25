@@ -95,12 +95,57 @@ func front(h Heading) (Front, int) {
 
 // putFront asks for f in place of h's front, which ends at end.
 func putFront(h Heading, f Front, end int) {
-	text := f.String()
-	// A front at the end of the text may end with no newline.
+	edit(api.Edit{Start: h.Start, End: end, Text: frontText(f, end)})
+}
+
+// frontText returns f as the text of a front that ends at end. A front at
+// the end of the text may end with no newline.
+func frontText(f Front, end int) string {
 	if last, _ := sdk.Text(end-1, end); last != "\n" {
-		text = strings.TrimSuffix(text, "\n")
+		return strings.TrimSuffix(f.String(), "\n")
 	}
-	edit(api.Edit{Start: h.Start, End: end, Text: text})
+	return f.String()
+}
+
+// counted asks for h's subtree as change makes it, with its counts
+// written again, and keeps the cursor where it was.
+func counted(cursor int, h Heading, change func(sub string) string) {
+	end := subtree(h)
+	old, _ := sdk.Text(h.Start, end)
+	t, d := bufferKeys()
+	text := recount(change(old), h.Level, t, d)
+	e, ok := diffEdit(old, text, h.Start)
+	if !ok {
+		return
+	}
+	// The cursor keeps its line and column, as a count changes lines in
+	// place and a done keyword adds them after the heading.
+	before := old[:cursor-h.Start]
+	line, col := strings.Count(before, "\n"), len(before)-strings.LastIndexByte(before, '\n')-1
+	at := 0
+	for range line {
+		at += strings.IndexByte(text[at:], '\n') + 1
+	}
+	rest, _, _ := strings.Cut(text[at:], "\n")
+	sdk.Do(api.Result{Edits: []api.Edit{e}, Jump: &api.Jump{Pos: h.Start + at + min(col, len(rest))}})
+}
+
+// diffEdit returns the edit that makes old new, which starts at base: of
+// what lies between what they share at their starts and at their ends. It
+// is false when they are the same.
+func diffEdit(old, new string, base int) (api.Edit, bool) {
+	if old == new {
+		return api.Edit{}, false
+	}
+	p := 0
+	for p < len(old) && p < len(new) && old[p] == new[p] {
+		p++
+	}
+	s := 0
+	for s < len(old)-p && s < len(new)-p && old[len(old)-1-s] == new[len(new)-1-s] {
+		s++
+	}
+	return api.Edit{Start: base + p, End: base + len(old) - s, Text: new[p : len(new)-s]}, true
 }
 
 // changeFront runs change on the front of the section that holds pos, and
@@ -158,12 +203,20 @@ func sibling(h Heading, below bool) (Heading, bool) {
 }
 
 // cycleTodo puts the next keyword on the heading h, or the one before with
-// back, as setKeyword does.
-func cycleTodo(h Heading, back bool) {
+// back, as setKeyword does, and counts its parent's children again.
+func cycleTodo(cursor int, h Heading, back bool) {
 	t, d := bufferKeys()
 	f, end := front(h)
 	setKeyword(&f, nextKeyword(f.Head.Keyword, t, d, back), t, d, sdk.Now(), logDone())
-	putFront(h, f, end)
+	p, ok := parent(h)
+	if !ok {
+		putFront(h, f, end)
+		return
+	}
+	text := frontText(f, end)
+	counted(cursor, p, func(sub string) string {
+		return sub[:h.Start-p.Start] + text + sub[end-p.Start:]
+	})
 }
 
 // logDone reports whether a heading that is done gets a CLOSED date.
