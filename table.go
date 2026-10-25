@@ -168,9 +168,9 @@ func parseFormulas(line string) ([]Formula, error) {
 	return out, nil
 }
 
-// Calc applies fs to t: a column formula to each row under the first rule,
-// or every row with no rule, and then each field formula. Rows count from
-// 1 and pass over rules, as org counts them.
+// Calc applies fs to t. A column formula sets each row under the first
+// rule, or every row when there is none, and a field formula then sets its
+// field. Rows count from 1 and skip rules, as org counts them.
 func (t *Table) Calc(fs []Formula) error {
 	var rows []int // the indexes of t.Rows that are rows, not rules
 	firstData := 0
@@ -229,11 +229,11 @@ func format(v float64) string {
 }
 
 // evaluate works out expr for the field at row and col of a table of rows
-// rows, cell giving the text of a field. It knows numbers, + - * / ^ and
-// brackets, $c for column c of row, @r for row r of col, @r$c for a field,
-// and vsum, vmean, vmin, vmax and vcount of a range such as @2..@4 or
-// @2$1..@4$3. A row is a number, @< for the first, @> for the last, or @-n
-// or @+n from row.
+// rows, and cell gives the text of a field. expr has numbers, + - * / ^
+// and brackets. $c is column c of row, @r is row r of col, and @r$c is a
+// field. vsum, vmean, vmin, vmax and vcount take a range such as @2..@4
+// or @2$1..@4$3. A row is a number, @< for the first, @> for the last, or
+// @-n or @+n from row.
 func evaluate(expr string, row, col, rows int, cell func(r, c int) string) (float64, error) {
 	p := &calc{s: strings.ReplaceAll(expr, " ", ""), row: row, col: col, rows: rows, cell: cell}
 	v, err := p.sum()

@@ -106,10 +106,10 @@ none, its children with a TODO keyword. In a list item it counts the
 checkboxes of the items under it. `<C-Space>` and `cit` count again as they
 change one.
 
-A sparse tree closes every fold with `zM` and opens, with `zv`, those that
-hide a matching line, so `zR` shows everything again. A section opened
-to reach a match shows its own text too, where org would hide it, as a
-fude fold holds a section whole.
+A sparse tree closes every fold with `zM`, then opens with `zv` each fold
+that hides a matching line, so `zR` shows everything again. A section
+opened to reach a match also shows its own text, which org would hide,
+because a fude fold holds a whole section.
 
 Column view's columns come from `#+COLUMNS:`, such as
 `%25ITEM %TODO %Effort(Time){:} %COST{+}`, or else org's default,
@@ -119,13 +119,13 @@ of a heading's children and `{:}` their times. `<CR>` on a row goes to its
 heading.
 
 A table's column is to the right when more than half its cells are
-numbers. Its formulas are org's: `$4=$2*$3` sets a column under the first
-rule, and `@4$2=vsum(@2..@3)` one field. A formula knows `+ - * / ^`,
-brackets, `$c`, `@r`, `@r$c`, `@<` and `@>` for the first and last row,
-`@-1` for the row above, and `vsum`, `vmean`, `vmin`, `vmax` and `vcount`
-of a range. Rows count past rules, as in org.
+numbers. Its formulas work as in org. `$4=$2*$3` sets a column under the
+first rule, and `@4$2=vsum(@2..@3)` sets one field. A formula has
+`+ - * / ^`, brackets, `$c`, `@r`, `@r$c`, `@<` and `@>` for the first and
+last row, `@-1` for the row above, and `vsum`, `vmean`, `vmin`, `vmax` and
+`vcount` of a range. Row numbers skip rules, as in org.
 
-A clock goes in the heading's `:LOGBOOK:` drawer as `CLOCK: [start]`, and
+Clocking in adds `CLOCK: [start]` to the heading's `:LOGBOOK:` drawer, and
 clocking out closes it as `CLOCK: [start]--[end] =>  1:05`. The status line
 shows the task and how long it has run. A clock table sums the closed
 clocks of each heading and the headings under it, between `#+BEGIN:

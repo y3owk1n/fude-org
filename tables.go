@@ -94,7 +94,7 @@ func moveCell(cursor int, back bool) bool {
 }
 
 // alignTable aligns the table that holds cursor, or makes the cursor's
-// line one, its cells apart by commas or tabs.
+// line one, its cells separated by commas or tabs.
 func alignTable(cursor int) {
 	n, _ := sdk.LineOf(cursor)
 	first, last, lines, ok := tableAt(n)

@@ -48,9 +48,10 @@ func clockLine(line string) (Stamp, Stamp, bool, bool) {
 	return start, end, ok, true
 }
 
-// clockIn clocks in the heading of the section that holds cursor: it adds
-// CLOCK: and now at the top of its LOGBOOK drawer, made under its front
-// when it has none, and clocks out the clock running first.
+// clockIn clocks in the heading of the section that holds cursor, after
+// clocking out the clock running. It adds CLOCK: and now at the top of the
+// heading's LOGBOOK drawer, which it makes under the front when there is
+// none.
 func clockIn(cursor int) error {
 	h, ok := owner(cursor)
 	if !ok {
@@ -101,8 +102,8 @@ func showClock() {
 }
 
 // clockOut closes the clock running, in its file or the buffer, with now
-// and how long it ran, or takes its line away with cancel. With no clock
-// running, it closes the open one of the buffer.
+// and how long it ran. With cancel it removes the clock's line instead.
+// With no clock running, it closes the buffer's open clock.
 func clockOut(cancel bool) error {
 	if running != nil && running.Path != sdk.Current().Path {
 		p := running.Path
@@ -132,8 +133,8 @@ func clockOut(cancel bool) error {
 	return nil
 }
 
-// closeClock closes the open CLOCK: line of text with now, or takes it and
-// a LOGBOOK drawer it leaves empty away with cancel.
+// closeClock closes the open CLOCK: line of text with now. With cancel it
+// removes the line, and the LOGBOOK drawer when that leaves it empty.
 func closeClock(text string, cancel bool) (string, error) {
 	lines := strings.Split(text, "\n")
 	i := slices.IndexFunc(lines, func(l string) bool {
@@ -166,8 +167,8 @@ func clockGoto() error {
 }
 
 // clockTable puts a clock table of the buffer at the cursor, or writes the
-// one the cursor is in again: each heading with time clocked in it or
-// under it, and how long, under a total.
+// one the cursor is in again. It lists the total, then each heading with
+// time clocked in it or under it, and how long.
 func clockTable(cursor int) {
 	n, _ := sdk.Len()
 	text, _ := sdk.Text(0, n)
