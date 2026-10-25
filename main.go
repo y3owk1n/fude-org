@@ -182,7 +182,7 @@ func init() {
 			return nil
 		})
 	})
-	key("tags", "<Leader>ot", "asks for the section's tags, apart by blanks or colons", func(c sdk.Call) {
+	key("tags", "<Leader>ot", "asks for the section's tags, separated by spaces or colons", func(c sdk.Call) {
 		h, ok := owner(c.Cursor)
 		if !ok {
 			return
@@ -259,8 +259,8 @@ func ask(prompt, query string, answer func(text string) error) {
 	report(sdk.Do(api.Result{Pick: &api.Pick{ID: id, Prompt: prompt, Query: query}}))
 }
 
-// stepPriority returns the priority by after p, in the order none, C, B,
-// A, and around again.
+// stepPriority returns the priority by steps after p, in the order none,
+// C, B, A, and around again.
 func stepPriority(p string, by int) string {
 	order := []string{"", "C", "B", "A"}
 	return order[(slices.Index(order, p)+by+len(order))%len(order)]

@@ -54,9 +54,34 @@ In an org file:
 | `>s`, `<s` | does the same to the heading and every heading under it |
 | `<Leader>oJ`, `<Leader>oK` | moves the heading and its subtree past the next or the previous heading of its level |
 | `ah`, `ih` | a heading and its subtree, or the subtree without the heading, for an operator such as `d` or `y` |
+| `]]`, `[[` | goes to the next or the previous heading |
+| `][`, `[]` | goes to the next or the previous heading of the section's level |
+| `g{` | goes to the section's heading, or from a heading to the one it is under |
+| `<Leader><CR>` | adds a heading after the heading's subtree, or an item after the list item |
+| `<Leader>oih`, `<Leader>oit`, `<Leader>ois` | adds a heading, a TODO heading or a subheading after the section's subtree |
+| `<S-Up>`, `<S-Down>` | raises or lowers the heading's priority, or moves the part of a timestamp under the cursor |
+| `<S-Right>`, `<S-Left>` | puts the next or the previous TODO keyword on the heading, or moves a timestamp a day |
+| `<C-a>`, `<C-x>` | moves the part of a timestamp under the cursor, n of its unit |
+| `<Leader>o,` | asks for the section's priority |
+| `<Leader>ot` | asks for the section's tags, from those it has |
+| `<Leader>op`, `<Leader>oP` | sets a property in the section's drawer, or removes one |
+| `<Leader>os`, `<Leader>od` | asks when the section is scheduled or due |
+| `<Leader>o.`, `<Leader>o!` | puts an active or an inactive timestamp at the cursor |
 
-Off a heading or a list item, each key does what it does in any other
-file, so `<Tab>` still jumps forward and `>>` still indents.
+Off a heading, a list item or a timestamp, each key does what it does in
+any other file, so `<Tab>` still jumps forward, `>>` still indents and
+`<C-a>` still adds to a number.
+
+A date is asked for as org asks for one: `2026-11-02`, `+3d`, `-1w`,
+`today`, `tomorrow` or a weekday such as `fri`, each followed by a time
+such as `10:00`, a repeater such as `+1w` and a warning such as `-2d`.
+None removes the date.
+
+A heading put to a done keyword gets `CLOSED:` with the time. One whose
+`SCHEDULED:` or `DEADLINE:` date repeats moves that date on instead and
+keeps its TODO keyword: `+1w` a week, `++1w` past today, `.+1w` a week from
+today. `LAST_REPEAT` notes when. A file's own `#+TODO:` line sets its
+keywords.
 
 Anywhere:
 
@@ -76,19 +101,17 @@ Set them in the table's `options`, such as
 
 | Option | Default | What it is |
 |---|---|---|
-| `todo` | `TODO \| DONE` | the TODO keywords, those after `\|` done. The plugin reads it when it loads. |
+| `todo` | `TODO \| DONE` | the TODO keywords, those after `\|` done, for files with no `#+TODO:` line. The plugin reads it when it loads. |
+| `log_done` | `true` | a heading put to a done keyword gets `CLOSED:` with the time |
 | `directory` | `~/org` | the folder the agenda reads, which `paths` must hold |
 | `inbox` | `~/org/inbox.org` | the file capture adds to |
 
 ## Not yet
 
 The agenda lists TODO headings, and headings with a `SCHEDULED:` or
-`DEADLINE:` date on the line after them. It has no repeaters, clocking,
-tags view or custom views. There are no tables, properties, links, export
-or code blocks yet.
-
-"Today" is today in UTC, as a plugin's clock is, so near midnight it may
-be a day off from yours.
+`DEADLINE:` date on the line after them. It has no week view, clocking,
+tags view or custom views. There are no links, checkbox counts, refile,
+archive, capture templates, tables, export or code blocks yet.
 
 ## Check
 
