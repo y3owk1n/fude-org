@@ -59,6 +59,9 @@ func TestTodo(t *testing.T) {
 		{"cit", "*", 0, "* TODO"},
 		{"cit", "* TODO", 0, "* DONE"},
 		{"cit", "no heading", 0, "no heading"},
+		// A file's #+TODO line sets its keywords.
+		{"cit", "#+TODO: NEXT WAIT | DONE\n* WAIT Call", 25, "#+TODO: NEXT WAIT | DONE\n* DONE Call"},
+		{"cit", "#+TODO: NEXT WAIT | DONE\n* TODO Call", 25, "#+TODO: NEXT WAIT | DONE\n* NEXT TODO Call"},
 	})
 }
 

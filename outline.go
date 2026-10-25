@@ -115,26 +115,32 @@ func sibling(h Heading, below bool) (Heading, bool) {
 	return Heading{}, false
 }
 
-// cycleTodo puts the next of the TODO keywords on h, or the one before
-// with back, in the order the todo option lists them and then none. The
-// keyword is the word after the stars and the blank after them.
-func cycleTodo(h Heading, back bool) api.Edit {
-	keys := append(append([]string{}, todo...), done...)
-	at, start, end := len(keys), h.Start+h.Level, h.Start+h.Level
-	if words := strings.Fields(h.Text[h.Level:]); len(words) > 0 {
-		if i := slices.Index(keys, words[0]); i >= 0 {
-			at, end = i, start+1+len(words[0])
-		}
+// cycleTodo puts the next of the keywords todo and done on the heading h,
+// or the one before with back, in their order and then none.
+func cycleTodo(h Heading, todo, done []string, back bool) api.Edit {
+	keys := slices.Concat(todo, done)
+	head, _ := parseHead(h.Text, keys)
+	at := slices.Index(keys, head.Keyword)
+	if at < 0 {
+		at = len(keys)
 	}
 	step := 1
 	if back {
 		step = len(keys)
 	}
-	text := ""
+	head.Keyword = ""
 	if next := (at + step) % (len(keys) + 1); next < len(keys) {
-		text = " " + keys[next]
+		head.Keyword = keys[next]
 	}
-	return api.Edit{Start: start, End: end, Text: text}
+	return api.Edit{Start: h.Start, End: h.Start + len(h.Text), Text: head.String()}
+}
+
+// bufferKeys returns the TODO keywords of the buffer the call is about, as
+// its #+TODO lines or the todo option set them.
+func bufferKeys() ([]string, []string) {
+	n, _ := sdk.Len()
+	text, _ := sdk.Text(0, min(n, 8192))
+	return keywordsIn(text, todo, done)
 }
 
 // shift adds a star to each heading from start to end, or takes one away

@@ -52,12 +52,14 @@ func init() {
 	})
 	key("todo_next", "cit", "puts the next TODO keyword on the heading", func(c sdk.Call) {
 		if h, ok := heading(c.Cursor); ok {
-			edit(cycleTodo(h, false))
+			t, d := bufferKeys()
+			edit(cycleTodo(h, t, d, false))
 		}
 	})
 	key("todo_prev", "ciT", "puts the TODO keyword before on the heading", func(c sdk.Call) {
 		if h, ok := heading(c.Cursor); ok {
-			edit(cycleTodo(h, true))
+			t, d := bufferKeys()
+			edit(cycleTodo(h, t, d, true))
 		}
 	})
 	key("checkbox", "<C-Space>", "ticks the checkbox of the list item, or clears it", func(c sdk.Call) {
@@ -208,16 +210,11 @@ func key(name, keys, help string, f func(sdk.Call)) {
 	})
 }
 
-// keywords returns the TODO keywords and the done ones the todo option
-// lists, DONE alone when it lists none after |.
-func keywords() (todo, done []string) {
+// keywords returns the TODO keywords the todo option lists, as a #+TODO
+// line would.
+func keywords() ([]string, []string) {
 	v, _ := sdk.Option("fude-org.todo")
-	before, after, found := strings.Cut(v, "|")
-	todo, done = strings.Fields(before), strings.Fields(after)
-	if !found && len(todo) > 1 {
-		todo, done = todo[:len(todo)-1], todo[len(todo)-1:]
-	}
-	return todo, done
+	return keywordsIn("#+TODO: "+v, nil, nil)
 }
 
 // quoted returns words as a query's strings, each quoted.

@@ -16,6 +16,7 @@ import (
 // that is not done.
 type Entry struct {
 	Path, Keyword, Title string
+	Tags                 []string
 	Line                 int    // from 0
 	Date                 string // when it is scheduled or due, as 2006-01-02, or ""
 	Deadline             bool
@@ -107,46 +108,34 @@ func readFile(p string) error {
 	return nil
 }
 
-// entries returns the agenda's entries in text, the file at p.
+// entries returns the agenda's entries in text, the file at p, by the
+// TODO keywords it sets.
 func entries(p, text string) []Entry {
+	t, d := keywordsIn(text, todo, done)
+	keys := slices.Concat(t, d)
 	lines := strings.Split(text, "\n")
 	var out []Entry
 	for i, line := range lines {
-		l := level(line)
-		if l == 0 {
+		h, ok := parseHead(line, keys)
+		if !ok || slices.Contains(d, h.Keyword) {
 			continue
 		}
-		e := Entry{Path: p, Line: i, Title: strings.TrimSpace(line[l:])}
-		if words := strings.Fields(e.Title); len(words) > 0 && (slices.Contains(todo, words[0]) || slices.Contains(done, words[0])) {
-			e.Keyword, e.Title = words[0], strings.TrimSpace(e.Title[len(words[0]):])
-		}
-		// Tags end the title, as :home:work: does.
-		if words := strings.Fields(e.Title); len(words) > 1 && strings.HasPrefix(words[len(words)-1], ":") && strings.HasSuffix(words[len(words)-1], ":") {
-			e.Title = strings.TrimSpace(strings.TrimSuffix(e.Title, words[len(words)-1]))
-		}
+		e := Entry{Path: p, Line: i, Keyword: h.Keyword, Title: h.Title, Tags: h.Tags}
 		if i+1 < len(lines) {
-			e.Date, e.Deadline = planned(lines[i+1])
+			if plan, ok := parsePlan(lines[i+1]); ok {
+				switch {
+				case plan.Deadline != nil:
+					e.Date, e.Deadline = plan.Deadline.Day.Format(time.DateOnly), true
+				case plan.Scheduled != nil:
+					e.Date = plan.Scheduled.Day.Format(time.DateOnly)
+				}
+			}
 		}
-		if !slices.Contains(done, e.Keyword) && (e.Keyword != "" || e.Date != "") {
+		if e.Keyword != "" || e.Date != "" {
 			out = append(out, e)
 		}
 	}
 	return out
-}
-
-// planned returns the date a planning line, such as
-// "DEADLINE: <2026-10-25 Sun>", gives, and whether it is a deadline. A
-// deadline comes first when the line has both.
-func planned(line string) (string, bool) {
-	for _, word := range []string{"DEADLINE:", "SCHEDULED:"} {
-		if _, after, ok := strings.Cut(line, word); ok {
-			after = strings.TrimSpace(after)
-			if len(after) >= 11 && after[0] == '<' {
-				return after[1:11], word == "DEADLINE:"
-			}
-		}
-	}
-	return "", false
 }
 
 // show shows the agenda: what is overdue, due today, in the week ahead and
@@ -239,7 +228,8 @@ func todoIn(e *Entry) error {
 	}
 	start := len(strings.Join(lines[:e.Line], ""))
 	line := strings.TrimSuffix(lines[e.Line], "\n")
-	ed := cycleTodo(Heading{e.Line, start, level(line), line}, false)
+	t, d := keywordsIn(text, todo, done)
+	ed := cycleTodo(Heading{e.Line, start, level(line), line}, t, d, false)
 	if err := sdk.WriteFile(e.Path, text[:ed.Start]+ed.Text+text[ed.End:]); err != nil {
 		return err
 	}
