@@ -137,10 +137,14 @@ entries come from the BibTeX files that the file's `#+bibliography:` lines
 name, beside it, and from the `bibliography` option. Export renders citations with
 pandoc's `--citeproc`.
 
+![fude-org running a shell block into its results, editing a block as a shell script and tangling it to a file](demos/code.gif)
+
 A source block runs with the program that the `languages` option gives
 its language, with the block's text as the program's input. What it
 prints replaces the block's `#+RESULTS:`, one `: ` line per printed line. Tangling writes the blocks of
 one file in their order, beside the org file.
+
+![fude-org aligning a table as it is typed, working out its totals and showing a subtree's efforts as columns](demos/tables.gif)
 
 A table's column is to the right when more than half its cells are
 numbers. Its formulas work as in org. `$4=$2*$3` sets a column under the
@@ -150,11 +154,15 @@ formulas. A formula has
 last row, `@-1` for the row above, and `vsum`, `vmean`, `vmin`, `vmax` and
 `vcount` of a range. Row numbers skip rules, as in org.
 
+![fude-org clocking in with the time on the status line, putting a clock table and moving a repeating task's date on](demos/time.gif)
+
 Clocking in adds `CLOCK: [start]` to the heading's `:LOGBOOK:` drawer, and
 clocking out closes it as `CLOCK: [start]--[end] =>  1:05`. The status line
 shows the task and how long it has run. A clock table sums the closed
 clocks of each heading and the headings under it, between `#+BEGIN:
 clocktable` and `#+END:`.
+
+![fude-org following links, adding a footnote, showing a sparse tree and refiling a subtree to another file](demos/notes.gif)
 
 A link is `[[target][description]]` or `[[target]]`. Away from the
 cursor's line it shows only its description, or its target when it has
@@ -255,10 +263,13 @@ test -z "$(gofmt -l .)" && fude plugin build && go test ./test/
 
 ## Demo
 
-`demos/org.tape` records the clip above with
-[VHS](https://github.com/charmbracelet/vhs): `vhs demos/org.tape` from the
-repo root, with VHS, ttyd and ffmpeg on PATH. `demos/setup.sh` runs hidden
-first. It builds fude from `../fude` and this plugin, and gives them a
-throwaway HOME under `/tmp/fude-org-demo` with notes dated from today, so
-a recording never touches your config or your notes. The tape builds the
-org grammar out of view, which needs git, tree-sitter and the network.
+Each clip has a tape in `demos/`. Record one with
+[VHS](https://github.com/charmbracelet/vhs) from the repo root, with VHS,
+ttyd and ffmpeg on PATH. `vhs demos/org.tape` writes `demos/org.gif`, and
+the `tables`, `code`, `time` and `notes` tapes write the other clips.
+`demos/setup.sh` runs hidden first. It builds fude from `../fude` and this plugin, and gives
+them a throwaway HOME under `/tmp/fude-org-demo` with the clip's notes,
+dated from today, so a recording never touches your config or your notes.
+The first recording builds the org grammar out of view, in a tmux session,
+which needs git, tree-sitter and the network. Later recordings reuse it
+from `demos/out/`.

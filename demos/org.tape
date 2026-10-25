@@ -6,17 +6,7 @@ Output demos/out/org.mp4
 Source demos/style.tape
 
 Hide
-Type "source demos/setup.sh"
-Enter
-Wait
-# The org grammar builds out of view, so the clip has colours from its start.
-Type "fude todo.org"
-Enter
-Wait+Screen@200s /built the org grammar/
-Type ":q"
-Enter
-Wait
-Type "clear"
+Type "source demos/setup.sh org"
 Enter
 Wait
 Show
@@ -44,7 +34,7 @@ Tab
 Sleep 1.5s
 
 # cit marks the groceries done with the time, and <C-Space> ticks the
-# milk.
+# milk and counts again.
 Type "4G"
 Sleep 400ms
 Type "cit"
@@ -59,7 +49,7 @@ Type "/Errands"
 Enter
 Sleep 400ms
 Type " os"
-Sleep 600ms
+Wait+Screen@10s /scheduled/
 Type@80ms "fri 10:00"
 Enter
 Sleep 600ms
@@ -79,7 +69,7 @@ Sleep 2s
 
 # Capture adds a TODO to ~/org/inbox.org from anywhere.
 Type " oc"
-Sleep 800ms
+Wait+Screen@10s /capture/
 Type@80ms "Call the dentist"
 Sleep 400ms
 Enter
@@ -91,7 +81,7 @@ Sleep 800ms
 # The agenda's week gathers every file in ~/org: what is overdue, then
 # each day. t marks one done in its file, and <CR> opens one.
 Type " oa"
-Sleep 800ms
+Wait+Screen@10s /agenda/
 Enter
 Sleep 2.5s
 Type "jjj"
