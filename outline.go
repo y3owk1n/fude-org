@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -57,13 +58,21 @@ func headingAt(n int) (Heading, bool) {
 
 // subtree returns where h's subtree ends: at the next heading of h's
 // level or above, or at the end of the text.
-func subtree(h Heading) int {
+func subtree(h Heading) int { return until(h, h.Level) }
+
+// sectionEnd returns where h's own text ends: at the next heading, or at
+// the end of the text.
+func sectionEnd(h Heading) int { return until(h, math.MaxInt) }
+
+// until returns where the next heading after h of level top or above
+// starts, or the end of the text.
+func until(h Heading, top int) int {
 	n, _ := sdk.Len()
 	rest, _ := sdk.Text(h.Start, n)
 	at := strings.IndexByte(rest, '\n')
 	for at >= 0 {
 		line, _, _ := strings.Cut(rest[at+1:], "\n")
-		if l := level(line); l > 0 && l <= h.Level {
+		if l := level(line); l > 0 && l <= top {
 			return h.Start + at + 1
 		}
 		next := strings.IndexByte(rest[at+1:], '\n')
@@ -73,6 +82,37 @@ func subtree(h Heading) int {
 		at += next + 1
 	}
 	return n
+}
+
+// front reads the front of h's section, and returns it and where it ends.
+func front(h Heading) (Front, int) {
+	text, _ := sdk.Text(h.Start, sectionEnd(h))
+	t, d := bufferKeys()
+	f, used := parseFront(text, slices.Concat(t, d))
+	return f, h.Start + used
+}
+
+// putFront asks for f in place of h's front, which ends at end.
+func putFront(h Heading, f Front, end int) {
+	text := f.String()
+	// A front at the end of the text may end with no newline.
+	if last, _ := sdk.Text(end-1, end); last != "\n" {
+		text = strings.TrimSuffix(text, "\n")
+	}
+	edit(api.Edit{Start: h.Start, End: end, Text: text})
+}
+
+// changeFront runs change on the front of the section that holds pos, and
+// asks for what it made of it.
+func changeFront(pos int, change func(f *Front)) {
+	h, ok := owner(pos)
+	if !ok {
+		sdk.Do(api.Result{Error: "no heading here"})
+		return
+	}
+	f, end := front(h)
+	change(&f)
+	putFront(h, f, end)
 }
 
 // owner returns the heading whose section holds pos: the one on its line,

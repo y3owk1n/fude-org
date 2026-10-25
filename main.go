@@ -4,6 +4,8 @@
 package main
 
 import (
+	"errors"
+	"slices"
 	"strings"
 
 	"github.com/y3owk1n/fude/api"
@@ -141,6 +143,54 @@ func init() {
 		h, _ := owner(c.Cursor)
 		addHeading(c.Cursor, h, h.Level+1, "")
 	})
+	key("priority_up", "<S-Up>", "raises the heading's priority, none, C, B, A", func(c sdk.Call) {
+		if _, ok := heading(c.Cursor); ok {
+			changeFront(c.Cursor, func(f *Front) { f.Head.Priority = stepPriority(f.Head.Priority, 1) })
+		}
+	})
+	key("priority_down", "<S-Down>", "lowers the heading's priority, A, B, C, none", func(c sdk.Call) {
+		if _, ok := heading(c.Cursor); ok {
+			changeFront(c.Cursor, func(f *Front) { f.Head.Priority = stepPriority(f.Head.Priority, -1) })
+		}
+	})
+	key("priority", "<Leader>o,", "asks for the section's priority, A, B, C or none", func(c sdk.Call) {
+		ask("priority (A, B, C or none)", "", func(text string) error {
+			p := strings.ToUpper(strings.TrimSpace(text))
+			if p != "" && !strings.Contains("ABC", p) || len(p) > 1 {
+				return errors.New("a priority is A, B, C or none")
+			}
+			changeFront(c.Cursor, func(f *Front) { f.Head.Priority = p })
+			return nil
+		})
+	})
+	key("tags", "<Leader>ot", "asks for the section's tags, apart by blanks or colons", func(c sdk.Call) {
+		h, ok := owner(c.Cursor)
+		if !ok {
+			return
+		}
+		f, _ := front(h)
+		ask("tags", strings.Join(f.Head.Tags, " "), func(text string) error {
+			tags := strings.FieldsFunc(text, func(r rune) bool { return r == ' ' || r == ':' })
+			changeFront(c.Cursor, func(f *Front) { f.Head.Tags = tags })
+			return nil
+		})
+	})
+	key("set_property", "<Leader>op", "asks for a property of the section, its name and its value", func(c sdk.Call) {
+		ask("property (name value)", "", func(text string) error {
+			name, value, _ := strings.Cut(strings.TrimSpace(text), " ")
+			if name == "" || strings.TrimSpace(value) == "" {
+				return errors.New("a property is a name and a value")
+			}
+			changeFront(c.Cursor, func(f *Front) { f.setProp(strings.ToUpper(name), strings.TrimSpace(value)) })
+			return nil
+		})
+	})
+	key("delete_property", "<Leader>oP", "asks for a property of the section by name, and removes it", func(c sdk.Call) {
+		ask("remove property", "", func(text string) error {
+			changeFront(c.Cursor, func(f *Front) { f.setProp(strings.TrimSpace(text), "") })
+			return nil
+		})
+	})
 	sdk.Object("ah", "a heading and its subtree", func(start, _ int) (int, int, bool) { return section(start, true) })
 	sdk.Object("ih", "a heading's subtree, without the heading", func(start, _ int) (int, int, bool) { return section(start, false) })
 
@@ -163,18 +213,38 @@ func init() {
 			report(capture(c.Args))
 			return
 		}
-		ask()
+		askCapture()
 	})
-	sdk.Key("capture", "<Leader>oc", "asks for a TODO and adds it to the inbox file", func(sdk.Call) { ask() })
+	sdk.Key("capture", "<Leader>oc", "asks for a TODO and adds it to the inbox file", func(sdk.Call) { askCapture() })
 }
 
-// ask asks for a TODO and adds it to the inbox file.
-func ask() {
-	sdk.Ask("capture", func(text string, ok bool) {
-		if ok && text != "" {
-			report(capture(text))
+// askCapture asks for a TODO and adds it to the inbox file.
+func askCapture() {
+	ask("capture", "", func(text string) error {
+		if text == "" {
+			return nil
 		}
+		return capture(text)
 	})
+}
+
+// ask asks for text, with query typed at the start, and runs answer with
+// it once the user answers. answer's error shows as the call's.
+func ask(prompt, query string, answer func(text string) error) {
+	id := sdk.Callback(func() bool {
+		if sdk.About("ok") == "true" {
+			report(answer(sdk.About("text")))
+		}
+		return false
+	})
+	report(sdk.Do(api.Result{Pick: &api.Pick{ID: id, Prompt: prompt, Query: query}}))
+}
+
+// stepPriority returns the priority by after p, in the order none, C, B,
+// A, and around again.
+func stepPriority(p string, by int) string {
+	order := []string{"", "C", "B", "A"}
+	return order[(slices.Index(order, p)+by+len(order))%len(order)]
 }
 
 // report shows err, if any, as the call's error.
