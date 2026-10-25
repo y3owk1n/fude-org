@@ -23,7 +23,8 @@ Add this table to fude's `config.toml`:
 ```toml
 [[plugin]]
 path = "/path/to/fude-org/fude-org.wasm"
-capabilities = ["buffer.read", "buffer.write", "ui", "fs.read", "fs.write", "keys", "grammar"]
+capabilities = ["buffer.read", "buffer.write", "ui", "fs.read", "fs.write", "process", "keys", "grammar"]
+programs = ["open"]
 paths = ["~/org"]
 ```
 
@@ -34,6 +35,8 @@ paths = ["~/org"]
   `:grammar install org` builds it.
 - `paths` is the folder of your org files, which the agenda reads and
   capture writes to.
+- `process` and `programs` let a web link open with `open`, or with
+  `xdg-open` on Linux, set as the `opener` option too.
 - `keys` lets `<Tab>` and `<S-Tab>` run fude's fold cycling. A guest of a
   shared session may not use a plugin granted `keys`.
 
@@ -68,6 +71,8 @@ In an org file:
 | `<Leader>os`, `<Leader>od` | asks when the section is scheduled or due |
 | `<Leader>o.`, `<Leader>o!` | puts an active or an inactive timestamp at the cursor |
 | `<Leader>o#` | counts again what the section's `[/]` and `[%]` count |
+| `<CR>` | follows the link under the cursor |
+| `<Leader>ols`, `<Leader>oli` | stores a link to the section's heading, or asks for a link, from the one stored, and a description, and puts it at the cursor |
 
 Off a heading, a list item or a timestamp, each key does what it does in
 any other file, so `<Tab>` still jumps forward, `>>` still indents and
@@ -87,6 +92,12 @@ A `[/]` or `[%]` in a heading counts the checkboxes in its text, or with
 none, its children with a TODO keyword. In a list item it counts the
 checkboxes of the items under it. `<C-Space>` and `cit` count again as they
 change one.
+
+A link is `[[target][description]]` or `[[target]]`, and shows as its
+description, or its target, except on the cursor's line. Its target is a
+heading of the file as `*title`, a heading's `CUSTOM_ID` as `#id`, a web
+address, or a file, `file:` before it or not, with `::*title`, `::#id`, a
+line number or text after it to go to in the file.
 
 Anywhere:
 
@@ -108,6 +119,7 @@ Set them in the table's `options`, such as
 |---|---|---|
 | `todo` | `TODO \| DONE` | the TODO keywords, those after `\|` done, for files with no `#+TODO:` line. The plugin reads it when it loads. |
 | `log_done` | `true` | a heading put to a done keyword gets `CLOSED:` with the time |
+| `opener` | `open` | the program that opens a web link, which `programs` must hold |
 | `directory` | `~/org` | the folder the agenda reads, which `paths` must hold |
 | `inbox` | `~/org/inbox.org` | the file capture adds to |
 
@@ -115,7 +127,7 @@ Set them in the table's `options`, such as
 
 The agenda lists TODO headings, and headings with a `SCHEDULED:` or
 `DEADLINE:` date on the line after them. It has no week view, clocking,
-tags view or custom views. There are no links, refile,
+tags view or custom views. There are no refile,
 archive, capture templates, tables, export or code blocks yet.
 
 ## Check

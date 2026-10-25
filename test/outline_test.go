@@ -13,7 +13,7 @@ import (
 // load loads the built plugin with the capabilities its README grants.
 func load(t *testing.T, g plugin.Grants) *plugintest.Plugin {
 	t.Helper()
-	g.Capabilities = []string{"buffer.read", "buffer.write", "ui", "fs.read", "fs.write", "keys", "grammar"}
+	g.Capabilities = []string{"buffer.read", "buffer.write", "ui", "fs.read", "fs.write", "process", "keys", "grammar"}
 	return plugintest.Load(t, "../fude-org.wasm", g, "")
 }
 

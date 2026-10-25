@@ -225,6 +225,12 @@ func init() {
 			return nil
 		})
 	})
+	sdk.Define("opener", "open", "the program that opens a web link, open on macOS and xdg-open on Linux, which the plugin's programs must hold")
+	key("follow", "<CR>", "follows the link under the cursor: a heading, a file, or a web link with the opener", func(c sdk.Call) { follow(c.Cursor) })
+	key("store_link", "<Leader>ols", "stores a link to the section's heading for <Leader>oli", func(c sdk.Call) { report(store(c.Cursor)) })
+	key("insert_link", "<Leader>oli", "asks for a link, from the one stored, and a description, and puts it at the cursor", func(c sdk.Call) { insertLink(c.Cursor) })
+	sdk.On("buffer.opened", func(sdk.Event) { showLinks() })
+	sdk.On("buffer.changed", func(sdk.Event) { showLinks() })
 	sdk.Object("ah", "a heading and its subtree", func(start, _ int) (int, int, bool) { return section(start, true) })
 	sdk.Object("ih", "a heading's subtree, without the heading", func(start, _ int) (int, int, bool) { return section(start, false) })
 
