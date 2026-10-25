@@ -4,6 +4,8 @@ Org mode for fude, as a plugin. It has fude build the org grammar, edits
 headings, TODOs and checkboxes, and shows an agenda of the org files in one
 folder, with a capture into its inbox.
 
+![fude-org cycling folds, marking a TODO done, moving a subtree, capturing and showing the agenda](demos/org.gif)
+
 ## Build
 
 ```sh
@@ -93,3 +95,13 @@ be a day off from yours.
 ```sh
 fude plugin build && go test ./test/
 ```
+
+## Demo
+
+`demos/org.tape` records the clip above with
+[VHS](https://github.com/charmbracelet/vhs): `vhs demos/org.tape` from the
+repo root, with VHS, ttyd and ffmpeg on PATH. `demos/setup.sh` runs hidden
+first. It builds fude from `../fude` and this plugin, and gives them a
+throwaway HOME under `/tmp/fude-org-demo` with notes dated from today, so
+a recording never touches your config or your notes. The tape builds the
+org grammar out of view, which needs git, tree-sitter and the network.
