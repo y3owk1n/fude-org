@@ -146,8 +146,8 @@ func tangle() error {
 			continue
 		}
 		if to := blk.Args[":tangle"]; to != "" && to != "no" {
-			if !path.IsAbs(to) && !strings.HasPrefix(to, "~") {
-				to = path.Join(path.Dir(sdk.Current().Path), to)
+			if !isAbs(to) {
+				to = path.Join(path.Dir(here()), to)
 			}
 			files[to] = append(files[to], blk.Text)
 			blocks++

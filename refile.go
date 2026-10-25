@@ -53,13 +53,13 @@ func refile(cursor int) {
 		return
 	}
 	gather(func() {
-		here := sdk.Current().Path
 		n, _ := sdk.Len()
 		text, _ := sdk.Text(0, n)
 		// The buffer's own headings come first, as it has them now.
-		all := targets(here, text)
+		file := here()
+		all := targets(file, text)
 		for _, p := range slices.Sorted(maps.Keys(read)) {
-			if p != here {
+			if p != file {
 				all = append(all, read[p].heads...)
 			}
 		}
@@ -87,7 +87,7 @@ func moveTo(h Heading, t Target) error {
 		return errors.New("the heading moved while refile asked where")
 	}
 	sub = relevel(sub, h.Level, t.Level+1)
-	if t.Path != sdk.Current().Path {
+	if t.Path != here() {
 		text, err := sdk.ReadFile(t.Path)
 		if err != nil {
 			return fmt.Errorf("read %s: %w", t.Path, err)
@@ -178,7 +178,6 @@ func archive(cursor int) error {
 	if !ok {
 		return errors.New("no heading here")
 	}
-	here := sdk.Current().Path
 	f, frontEnd := front(h)
 	var outline []string
 	for p, ok := parent(h); ok; p, ok = parent(p) {
@@ -187,11 +186,12 @@ func archive(cursor int) error {
 		outline = append([]string{head.Title}, outline...)
 	}
 	f.setProp("ARCHIVE_TIME", Stamp{Day: today(), Time: sdk.Now().Format("15:04")}.String())
-	f.setProp("ARCHIVE_FILE", here)
+	file := here()
+	f.setProp("ARCHIVE_FILE", file)
 	if len(outline) > 0 {
 		f.setProp("ARCHIVE_OLPATH", strings.Join(outline, "/"))
 	}
-	f.setProp("ARCHIVE_CATEGORY", strings.TrimSuffix(path.Base(here), path.Ext(here)))
+	f.setProp("ARCHIVE_CATEGORY", strings.TrimSuffix(path.Base(file), path.Ext(file)))
 	if f.Head.Keyword != "" {
 		f.setProp("ARCHIVE_TODO", f.Head.Keyword)
 	}
@@ -201,7 +201,7 @@ func archive(cursor int) error {
 	if !strings.HasSuffix(sub, "\n") {
 		sub += "\n"
 	}
-	to := here + "_archive"
+	to := file + "_archive"
 	_, exists, err := sdk.Stat(to)
 	text := ""
 	switch {
@@ -217,4 +217,3 @@ func archive(cursor int) error {
 	}
 	return sdk.Do(api.Result{Edits: []api.Edit{{Start: h.Start, End: end}}, Message: "archived to " + path.Base(to)})
 }
-

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/y3owk1n/fude/api"
+	"github.com/y3owk1n/fude/plugin"
 )
 
 // pick runs keys at at in text, waits for the list they gather, picks item
@@ -71,5 +72,26 @@ func TestArchive(t *testing.T) {
 		if err != nil || !strings.Contains(got, want) {
 			t.Errorf("the archive holds %q, %v, want %q in it", got, err, want)
 		}
+	}
+}
+
+// fude may name a buffer by a path relative to its working folder. The
+// plugin still writes the whole path where org does.
+func TestRelativePath(t *testing.T) {
+	dir := t.TempDir()
+	t.Chdir(dir)
+	p := load(t, plugin.Grants{})
+	p.Path = "a.org"
+	text := "* Work\n** DONE Report\n* Home"
+	if res := p.Key("<Leader>o$", text, 8, 0); res.Error != "" {
+		t.Fatal(res.Error)
+	}
+	b, err := os.ReadFile(filepath.Join(dir, "a.org_archive"))
+	if err != nil || !strings.Contains(string(b), ":ARCHIVE_FILE: "+filepath.Join(dir, "a.org")+"\n") {
+		t.Errorf("the archive holds %q, %v", b, err)
+	}
+	p.Key("<Leader>ols", text, 0, 0)
+	if res := p.Key("<Leader>oli", text, 0, 0); res.Pick == nil || res.Pick.Query != "file:"+filepath.Join(dir, "a.org")+"::*Work" {
+		t.Errorf("the stored link is %+v", res.Pick)
 	}
 }

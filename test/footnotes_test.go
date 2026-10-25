@@ -10,8 +10,8 @@ func TestFootnotes(t *testing.T) {
 	p := load(t, plugin.Grants{})
 	text := "Tea[fn:1] is good.\n* Footnotes\n[fn:1] Green, mostly."
 	for keys, c := range map[string]struct{ at, want int }{
-		"<Leader>of": {5, 31},  // the reference to its definition
-		"<CR>":       {4, 31},  // as <CR> does
+		"<Leader>of": {5, 31}, // the reference to its definition
+		"<CR>":       {4, 31}, // as <CR> does
 	} {
 		if res := p.Key(keys, text, c.at, 0); res.Jump == nil || res.Jump.Pos != c.want {
 			t.Errorf("%s on the reference went to %+v, want %d", keys, res.Jump, c.want)

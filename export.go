@@ -34,11 +34,11 @@ func export(format string) error {
 	if !ok {
 		return errors.New("no format " + format + ": " + strings.Join(slices.Sorted(maps.Keys(formats)), ", "))
 	}
-	here := sdk.Current().Path
-	if here == "" {
+	file := here()
+	if file == "" {
 		return errors.New("the buffer has no file to export beside")
 	}
-	to := strings.TrimSuffix(here, path.Ext(here)) + "." + f[1]
+	to := strings.TrimSuffix(file, path.Ext(file)) + "." + f[1]
 	n, _ := sdk.Len()
 	text, _ := sdk.Text(0, n)
 	args := []string{"-f", "org", "-t", f[0], "--standalone", "-o", to}

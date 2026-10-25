@@ -3,6 +3,7 @@
 package test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/y3owk1n/fude/api"
@@ -14,8 +15,11 @@ import (
 func load(t *testing.T, g plugin.Grants) *plugintest.Plugin {
 	t.Helper()
 	g.Capabilities = []string{"buffer.read", "buffer.write", "ui", "fs.read", "fs.write", "process", "keys", "grammar"}
-	return plugintest.Load(t, "../fude-org.wasm", g, "")
+	return plugintest.Load(t, wasm, g, "")
 }
+
+// wasm is the built plugin, found before a test changes folder.
+var wasm, _ = filepath.Abs("../fude-org.wasm")
 
 // step is keys run with the cursor at at in text, and the text they leave.
 type step struct {

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"math"
+	"path"
 	"slices"
 	"strconv"
 	"strings"
@@ -459,4 +460,20 @@ func sparse(text string) error {
 	}
 	keys += ":" + strconv.Itoa(first+1) + "<CR>"
 	return sdk.Do(api.Result{Keys: keys, Message: strconv.Itoa(count) + " lines hold " + text})
+}
+
+// here returns the absolute path of the buffer the call is about, or ""
+// for none. fude may give the path relative to its working folder.
+func here() string {
+	p := sdk.Current().Path
+	if p == "" || isAbs(p) {
+		return p
+	}
+	return path.Join(sdk.About("cwd"), p)
+}
+
+// isAbs reports whether p needs no folder before it. That is a path
+// absolute on Unix or Windows, such as C:\notes, or one starting with ~.
+func isAbs(p string) bool {
+	return path.IsAbs(p) || strings.HasPrefix(p, "~") || strings.HasPrefix(p, `\\`) || len(p) > 2 && p[1] == ':' && (p[2] == '\\' || p[2] == '/')
 }

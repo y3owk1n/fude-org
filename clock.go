@@ -79,7 +79,7 @@ func clockIn(cursor int) error {
 	running = &struct {
 		Path, Title string
 		Started     time.Time
-	}{sdk.Current().Path, f.Head.Title, sdk.Now()}
+	}{here(), f.Head.Title, sdk.Now()}
 	showClock()
 	return sdk.After(60_000, tick)
 }
@@ -105,7 +105,7 @@ func showClock() {
 // and how long it ran. With cancel it removes the clock's line instead.
 // With no clock running, it closes the buffer's open clock.
 func clockOut(cancel bool) error {
-	if running != nil && running.Path != sdk.Current().Path {
+	if running != nil && running.Path != here() {
 		p := running.Path
 		text, err := sdk.ReadFile(p)
 		if err != nil {
@@ -244,4 +244,3 @@ func clockRows(lines []string) []string {
 	table := append([]string{"|Heading|Time|", "|-", "|*Total time*|*" + hours(all) + "*|", "|-"}, body...)
 	return slices.Concat([]string{"#+BEGIN: clocktable :scope file"}, parseTable(table).Lines(), []string{"#+END:"})
 }
-

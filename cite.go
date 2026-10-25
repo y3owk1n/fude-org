@@ -22,12 +22,12 @@ type Ref struct {
 func bibliographies() []string {
 	n, _ := sdk.Len()
 	text, _ := sdk.Text(0, n)
-	dir := path.Dir(sdk.Current().Path)
+	dir := path.Dir(here())
 	var out []string
 	for line := range strings.Lines(text) {
 		if rest, ok := cutFold(strings.TrimSpace(line), "#+bibliography:"); ok {
 			for _, p := range strings.Fields(rest) {
-				if !path.IsAbs(p) && !strings.HasPrefix(p, "~") {
+				if !isAbs(p) {
 					p = path.Join(dir, p)
 				}
 				out = append(out, p)

@@ -76,16 +76,16 @@ func askText(t Template, cursor int) {
 // linkHere returns a link to where the capture began: the heading of the
 // section that holds cursor, or the file.
 func linkHere(cursor int) string {
-	here := sdk.Current().Path
-	if here == "" {
+	file := here()
+	if file == "" {
 		return ""
 	}
 	if h, ok := owner(cursor); ok && sdk.Current().Filetype == "org" {
 		t, d := bufferKeys()
 		head, _ := parseHead(h.Text, append(t, d...))
-		return "[[file:" + here + "::*" + head.Title + "][" + head.Title + "]]"
+		return "[[file:" + file + "::*" + head.Title + "][" + head.Title + "]]"
 	}
-	return "[[file:" + here + "]]"
+	return "[[file:" + file + "]]"
 }
 
 // capture adds t's text, with text for %? and link for %a, to the end of
@@ -93,7 +93,7 @@ func linkHere(cursor int) string {
 func capture(t Template, text, link string) error {
 	dir, _ := sdk.Option("fude-org.directory")
 	file := t.File
-	if !path.IsAbs(file) && !strings.HasPrefix(file, "~") {
+	if !isAbs(file) {
 		file = path.Join(dir, file)
 	}
 	now := sdk.Now()

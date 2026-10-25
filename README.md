@@ -247,7 +247,7 @@ attach other than copying.
 ## Check
 
 ```sh
-fude plugin build && go test ./test/
+test -z "$(gofmt -l .)" && fude plugin build && go test ./test/
 ```
 
 ## Demo

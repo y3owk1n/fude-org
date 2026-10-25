@@ -14,7 +14,7 @@ import (
 // as org keeps it: data/ beside the buffer's file, then the ID's first two
 // characters, then the rest.
 func attachDir(id string) string {
-	return path.Join(path.Dir(sdk.Current().Path), "data", id[:min(2, len(id))], id[min(2, len(id)):])
+	return path.Join(path.Dir(here()), "data", id[:min(2, len(id))], id[min(2, len(id)):])
 }
 
 // attachments asks what to do with the attachments of the section that

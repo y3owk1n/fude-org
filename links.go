@@ -53,7 +53,7 @@ func store(pos int) error {
 	}
 	t, d := bufferKeys()
 	head, _ := parseHead(h.Text, append(t, d...))
-	stored = "file:" + sdk.Current().Path + "::*" + head.Title
+	stored = "file:" + here() + "::*" + head.Title
 	if f, _ := front(h); f.prop("ID") != "" {
 		stored = "id:" + f.prop("ID")
 	}
@@ -98,8 +98,8 @@ func open(target string) error {
 		return errNotFound(target)
 	}
 	file, search, _ := strings.Cut(strings.TrimPrefix(target, "file:"), "::")
-	if !path.IsAbs(file) && !strings.HasPrefix(file, "~") {
-		file = path.Join(path.Dir(sdk.Current().Path), file)
+	if !isAbs(file) {
+		file = path.Join(path.Dir(here()), file)
 	}
 	j := &api.Jump{Path: file}
 	if search != "" {
@@ -162,7 +162,7 @@ func insertLink(cursor int) {
 			return nil
 		}
 		// A link to a heading of this file needs no file.
-		if title, ok := strings.CutPrefix(target, "file:"+sdk.Current().Path+"::"); ok {
+		if title, ok := strings.CutPrefix(target, "file:"+here()+"::"); ok {
 			target = title
 		}
 		ask("description", "", func(desc string) error {

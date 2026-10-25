@@ -82,7 +82,7 @@ func columnView(cursor int) {
 				}
 			}
 			line, _ := sdk.LineOf(at)
-			rows = append(rows, row{f.Head.Level, values, &Entry{Path: sdk.Current().Path, Line: line, Title: f.Head.Title}})
+			rows = append(rows, row{f.Head.Level, values, &Entry{Path: here(), Line: line, Title: f.Head.Title}})
 		}
 		at += len(line)
 	}
