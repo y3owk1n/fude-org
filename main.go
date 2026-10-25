@@ -248,6 +248,12 @@ func init() {
 	sdk.On("buffer.changed", func(sdk.Event) { showLinks() })
 	key("refile", "<Leader>or", "asks for a heading of the org files and moves the section's subtree under it", func(c sdk.Call) { refile(c.Cursor) })
 	key("archive", "<Leader>o$", "moves the section's subtree to the file's archive, <file>_archive", func(c sdk.Call) { report(archive(c.Cursor)) })
+	key("clock_in", "<Leader>oxi", "clocks in the section's heading, and out the clock running", func(c sdk.Call) { report(clockIn(c.Cursor)) })
+	key("clock_out", "<Leader>oxo", "clocks out the clock running", func(sdk.Call) { report(clockOut(false)) })
+	key("clock_cancel", "<Leader>oxq", "cancels the clock running, taking its line away", func(sdk.Call) { report(clockOut(true)) })
+	key("clock_goto", "<Leader>oxj", "goes to the heading the clock runs on", func(sdk.Call) { report(clockGoto()) })
+	key("clock_table", "<Leader>oxr", "puts a clock table of the file at the cursor, or writes the one the cursor is in again", func(c sdk.Call) { clockTable(c.Cursor) })
+	sdk.On("buffer.shown", func(sdk.Event) { showClock() })
 	sdk.Object("ah", "a heading and its subtree", func(start, _ int) (int, int, bool) { return section(start, true) })
 	sdk.Object("ih", "a heading's subtree, without the heading", func(start, _ int) (int, int, bool) { return section(start, false) })
 

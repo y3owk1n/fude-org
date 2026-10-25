@@ -75,6 +75,9 @@ In an org file:
 | `<Leader>o.`, `<Leader>o!` | puts an active or an inactive timestamp at the cursor |
 | `<Leader>o#` | counts again what the section's `[/]` and `[%]` count |
 | `<CR>` | follows the link under the cursor |
+| `<Leader>oxi`, `<Leader>oxo` | clocks in the section's heading, clocking out the clock running, or clocks out |
+| `<Leader>oxq`, `<Leader>oxj` | cancels the clock running, or goes to its heading |
+| `<Leader>oxr` | puts a clock table of the file at the cursor, or writes the one the cursor is in again |
 | `<Leader>or` | asks for a heading of the org files, or a file, and moves the section's subtree under it |
 | `<Leader>o$` | moves the section's subtree to the end of the file's archive, `<file>_archive` |
 | `<Leader>ols`, `<Leader>oli` | stores a link to the section's heading, or asks for a link, from the one stored, and a description, and puts it at the cursor |
@@ -104,6 +107,12 @@ rule, and `@4$2=vsum(@2..@3)` one field. A formula knows `+ - * / ^`,
 brackets, `$c`, `@r`, `@r$c`, `@<` and `@>` for the first and last row,
 `@-1` for the row above, and `vsum`, `vmean`, `vmin`, `vmax` and `vcount`
 of a range. Rows count past rules, as in org.
+
+A clock goes in the heading's `:LOGBOOK:` drawer as `CLOCK: [start]`, and
+clocking out closes it as `CLOCK: [start]--[end] =>  1:05`. The status line
+shows the task and how long it has run. A clock table sums the closed
+clocks of each heading and the headings under it, between `#+BEGIN:
+clocktable` and `#+END:`.
 
 A link is `[[target][description]]` or `[[target]]`. Away from the
 cursor's line it shows only its description, or its target when it has
@@ -165,7 +174,7 @@ Set them in the table's `options`, such as
 
 ## Not yet
 
-Clocking, column view, footnotes, sparse trees, narrowing, ID
+Column view, footnotes, sparse trees, narrowing, ID
 links, custom agenda views, export, code blocks, citations and
 attachments.
 
