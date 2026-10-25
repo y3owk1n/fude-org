@@ -126,11 +126,15 @@ func cellAt(line string, col int) int {
 }
 
 // Formula is one of a #+TBLFM: line's formulas: the field it sets, a whole
-// column when Row is 0, and its expression.
+// column when Row is 0 and the last row when it is lastRow, and its
+// expression.
 type Formula struct {
 	Row, Col int
 	Expr     string
 }
+
+// lastRow is the Row of a formula that sets the last row, @>.
+const lastRow = -1
 
 // parseFormulas reads a #+TBLFM: line.
 func parseFormulas(line string) ([]Formula, error) {
@@ -153,7 +157,16 @@ func parseFormulas(line string) ([]Formula, error) {
 			}
 			fm.Col = n
 		case field && strings.HasPrefix(r, "@"):
-			row, err1 := strconv.Atoi(r[1:])
+			var row int
+			var err1 error
+			switch r[1:] {
+			case "<":
+				row = 1
+			case ">":
+				row = lastRow
+			default:
+				row, err1 = strconv.Atoi(r[1:])
+			}
 			col, err2 := strconv.Atoi(c)
 			if err1 != nil || err2 != nil {
 				return nil, fmt.Errorf("%q is no field", target)
@@ -201,9 +214,14 @@ func (t *Table) Calc(fs []Formula) error {
 		row[c-1] = format(v)
 		t.Rows[rows[r-1]] = row
 	}
-	for _, f := range fs {
+	columns := slices.DeleteFunc(slices.Clone(fs), func(f Formula) bool { return f.Row != 0 })
+	fields := slices.DeleteFunc(slices.Clone(fs), func(f Formula) bool { return f.Row == 0 })
+	for _, f := range slices.Concat(columns, fields) {
 		targets := []int{f.Row}
-		if f.Row == 0 {
+		switch f.Row {
+		case lastRow:
+			targets = []int{len(rows)}
+		case 0:
 			targets = nil
 			for r := firstData + 1; r <= len(rows); r++ {
 				targets = append(targets, r)

@@ -49,8 +49,8 @@ func TestTableMake(t *testing.T) {
 }
 
 func TestTableCalc(t *testing.T) {
-	text := "| item | qty | price | total |\n|-\n| tea | 2 | 1.5 | |\n| cake | 1 | 4 | |\n|-\n| sum | | | |\n#+TBLFM: $4=$2*$3::@4$4=vsum(@2..@3)::@4$2=vsum(@2..@3)"
-	want := "| item | qty | price | total |\n|------+-----+-------+-------|\n| tea  |   2 |   1.5 |     3 |\n| cake |   1 |     4 |     4 |\n|------+-----+-------+-------|\n| sum  |   3 |       |     7 |\n#+TBLFM: $4=$2*$3::@4$4=vsum(@2..@3)::@4$2=vsum(@2..@3)"
+	text := "| item | qty | price | total |\n|-\n| tea | 2 | 1.5 | |\n| cake | 1 | 4 | |\n|-\n| sum | | | |\n#+TBLFM: @>$4=vsum(@2..@-1)::$4=$2*$3::@4$2=vsum(@2..@3)"
+	want := "| item | qty | price | total |\n|------+-----+-------+-------|\n| tea  |   2 |   1.5 |     3 |\n| cake |   1 |     4 |     4 |\n|------+-----+-------+-------|\n| sum  |   3 |       |     7 |\n#+TBLFM: @>$4=vsum(@2..@-1)::$4=$2*$3::@4$2=vsum(@2..@3)"
 	p := load(t, plugin.Grants{})
 	res := p.Key("<Leader>o=", text, 0, 0)
 	if got := applied(text, res); got != want {

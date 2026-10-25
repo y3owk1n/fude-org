@@ -144,7 +144,8 @@ one file in their order, beside the org file.
 
 A table's column is to the right when more than half its cells are
 numbers. Its formulas work as in org. `$4=$2*$3` sets a column under the
-first rule, and `@4$2=vsum(@2..@3)` sets one field. A formula has
+first rule, and `@>$4=vsum(@2..@-1)` sets one field, after the column
+formulas. A formula has
 `+ - * / ^`, brackets, `$c`, `@r`, `@r$c`, `@<` and `@>` for the first and
 last row, `@-1` for the row above, and `vsum`, `vmean`, `vmin`, `vmax` and
 `vcount` of a range. Row numbers skip rules, as in org.
