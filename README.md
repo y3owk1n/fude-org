@@ -82,7 +82,8 @@ In an org file:
 | `<Leader>obt` | writes each source block with `:tangle path` to that file |
 | `<Leader>o'` | opens the source block in a buffer of its language, which `:w` writes back |
 | `<Leader>o#` | counts again what the section's `[/]` and `[%]` count |
-| `<CR>` | follows the link under the cursor, or goes to the footnote's definition |
+| `<CR>` | follows the link under the cursor, opens the entry of the citation key, or goes to the footnote's definition |
+| `<Leader>o@` | asks for an entry of the bibliographies and cites it at the cursor, or adds it to the citation there |
 | `<Leader>of` | goes from a footnote to its definition and back, or adds a footnote at the cursor, its definition under `* Footnotes` |
 | `<Leader>oxi`, `<Leader>oxo` | clocks in the section's heading, clocking out the clock running, or clocks out |
 | `<Leader>oxq`, `<Leader>oxj` | cancels the clock running, or goes to its heading |
@@ -122,6 +123,11 @@ Column view's columns come from `#+COLUMNS:`, such as
 `TAGS` or a property, with its title in brackets. `{+}` sums the numbers
 of a heading's children and `{:}` their times. `<CR>` on a row goes to its
 heading.
+
+A citation is org's, `[cite:@key]` or `[cite/style:@a;@b]`. Its entries
+come from the BibTeX files of the file's `#+bibliography:` lines, beside
+it, and of the `bibliography` option. Export renders citations with
+pandoc's `--citeproc`.
 
 A source block runs with the program the `languages` option gives its
 language, its text the program's input. What it prints replaces the
@@ -214,12 +220,13 @@ Set them in the table's `options`, such as
 | `directory` | `~/org` | the folder the agenda reads, which `paths` must hold |
 | `views` | none | the agenda's own views, a line each: a key and a view |
 | `pandoc` | `pandoc` | the program export runs, which `programs` must hold |
+| `bibliography` | none | BibTeX files every org file cites from, separated by spaces |
 | `languages` | `sh=sh bash=bash python=python3 js=node ruby=ruby` | the program that runs each language's source blocks, which `programs` must hold |
 | `templates` | `t inbox.org * TODO %?` | the capture templates, a line each |
 
 ## Not yet
 
-Citations and attachments.
+Attachments.
 
 ## Check
 

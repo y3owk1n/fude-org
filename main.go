@@ -244,7 +244,7 @@ func init() {
 	})
 	sdk.Define("opener", "open", "the program that opens a web link, open on macOS and xdg-open on Linux, which the plugin's programs must hold")
 	key("follow", "<CR>", "follows the link under the cursor: a heading, a file, or a web link with the opener, or goes to the footnote's definition", func(c sdk.Call) {
-		if !follow(c.Cursor) {
+		if !follow(c.Cursor) && !followCite(c.Cursor) {
 			footnote(c.Cursor, true)
 		}
 	})
@@ -277,6 +277,8 @@ func init() {
 	key("tangle", "<Leader>obt", "writes each source block with :tangle path to that file", func(sdk.Call) { report(tangle()) })
 	key("edit_block", "<Leader>o'", "opens the source block in a buffer of its language, which :w writes back", func(c sdk.Call) { report(editBlock(c.Cursor)) })
 	key("columns", "<Leader>oC", "shows the section's headings, or the file's, with the columns of its #+COLUMNS: line", func(c sdk.Call) { columnView(c.Cursor) })
+	sdk.Define("bibliography", "", "BibTeX files every org file cites from, separated by spaces, besides those its #+bibliography: lines name")
+	key("cite", "<Leader>o@", "asks for an entry of the bibliographies and cites it at the cursor, or adds it to the citation there", func(c sdk.Call) { report(cite(c.Cursor)) })
 	sdk.Define("pandoc", "pandoc", "the program export runs, which the plugin's programs must hold")
 	sdk.Command("OrgExport", "writes the buffer beside its file in a format with pandoc: html, md, pdf, docx, odt, latex, epub or txt", func(c sdk.Call) { report(export(c.Args)) })
 	sdk.Key("export", "<Leader>oE", "asks for a format and writes the buffer beside its file in it with pandoc", func(sdk.Call) { pickExport() })

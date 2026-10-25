@@ -45,6 +45,13 @@ func export(format string) error {
 	if f[0] == "pdf" {
 		args = slices.Delete(args, 2, 4)
 	}
+	// Citations need pandoc's citeproc and the bibliographies.
+	if bibs := bibliographies(); len(bibs) > 0 {
+		args = append(args, "--citeproc")
+		for _, b := range bibs {
+			args = append(args, "--bibliography", b)
+		}
+	}
 	pandoc, _ := sdk.Option("fude-org.pandoc")
 	return sdk.Pipe(text, func(_ string, err error) {
 		if err != nil {
