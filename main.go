@@ -238,8 +238,9 @@ func init() {
 
 	sdk.Define("directory", "~/org", "the folder whose org files the agenda gathers, which the plugin's paths must hold")
 	sdk.Define("templates", "t inbox.org * TODO %?", "the capture templates, a line each: a key, a file with ::*heading after it or not, and the text")
-	sdk.Command("OrgAgenda", "shows the TODOs and the dated headings of the org files", func(sdk.Call) { agenda() })
-	sdk.Key("agenda", "<Leader>oa", "shows the agenda, as :OrgAgenda does", func(sdk.Call) { agenda() })
+	sdk.Command("OrgAgenda", "shows the agenda: the week, todo for every TODO, or tags and a match such as work+urgent-home", func(c sdk.Call) { report(showView(c.Args)) })
+	sdk.Key("agenda", "<Leader>oa", "asks for an agenda view, the week, every TODO or a match of tags, and shows it", func(sdk.Call) { pickView() })
+	sdk.Plug("agenda_again", "gathers the agenda again and shows the view shown last", func(sdk.Call) { agenda() })
 	sdk.Plug("agenda_open", "opens the heading the agenda shows on the cursor's line", func(c sdk.Call) {
 		if e, ok := shownAt(c.Cursor); ok {
 			sdk.Do(api.Result{Jump: &api.Jump{Path: e.Path, Line: e.Line + 1}})
@@ -262,6 +263,40 @@ func init() {
 		report(err)
 	})
 	sdk.Key("capture", "<Leader>oc", "asks for a capture template and the text, and adds it to the template's file", func(c sdk.Call) { askCapture(c.Cursor) })
+}
+
+// showView shows the agenda view args names: week, the default, todo, or
+// tags and a match.
+func showView(args string) error {
+	name, match, _ := strings.Cut(strings.TrimSpace(args), " ")
+	switch name {
+	case "", "week":
+		view = week
+	case "todo":
+		view = todos
+	case "tags":
+		if match = strings.TrimSpace(match); match == "" {
+			return errors.New("tags needs a match, such as work+urgent-home")
+		}
+		view = func() { tagged(match) }
+	default:
+		return errors.New("no agenda view " + name + ": week, todo or tags")
+	}
+	agenda()
+	return nil
+}
+
+// pickView asks for an agenda view, and for a match of tags, and shows it.
+func pickView() {
+	report(sdk.Pick("agenda", []string{"week", "todo", "tags"}, func(i int, ok bool) {
+		switch {
+		case !ok:
+		case i == 2:
+			ask("match tags", "", func(match string) error { return showView("tags " + match) })
+		default:
+			report(showView([]string{"week", "todo"}[i]))
+		}
+	}))
 }
 
 // ask asks for text, with query typed at the start, and runs answer with

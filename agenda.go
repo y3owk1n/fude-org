@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"maps"
 	"path"
@@ -12,14 +13,14 @@ import (
 	"github.com/y3owk1n/fude/sdk"
 )
 
-// Entry is a heading the agenda lists: a TODO one, or one scheduled or due
-// that is not done.
+// Entry is a heading the agenda may list: one with a TODO keyword, a date
+// it is scheduled or due, or tags.
 type Entry struct {
-	Path, Keyword, Title string
-	Tags                 []string
-	Line                 int    // from 0
-	Date                 string // when it is scheduled or due, as 2006-01-02, or ""
-	Deadline             bool
+	Path, Keyword, Title, Priority string
+	Tags                           []string // its own and those of the headings it is under
+	Line                           int      // from 0
+	Date                           *Stamp   // when it is due, or else scheduled, or nil
+	Deadline, Done                 bool
 }
 
 // file is what the agenda last read of a file: when it changed then, its
@@ -47,9 +48,12 @@ var scan struct {
 // budget of a callback.
 const slice = 40 * time.Millisecond
 
-// agenda gathers the org files under the directory option and then shows
-// their entries.
-func agenda() { gather(show) }
+// view is the agenda view shown last, which r and t show again.
+var view = week
+
+// agenda gathers the org files under the directory option and shows the
+// view shown last, the week at first.
+func agenda() { gather(func() { view() }) }
 
 // gather reads the org files under the directory option, a step in each
 // callback, and then runs then.
@@ -117,101 +121,185 @@ func readFile(p string) error {
 }
 
 // entries returns the agenda's entries in text, the file at p, by the
-// TODO keywords it sets.
+// TODO keywords it sets. A heading has the tags of those it is under too.
 func entries(p, text string) []Entry {
 	t, d := keywordsIn(text, todo, done)
 	keys := slices.Concat(t, d)
 	lines := strings.Split(text, "\n")
+	var tags [][]string // by level, the tags of the headings over the line
 	var out []Entry
 	for i, line := range lines {
 		h, ok := parseHead(line, keys)
-		if !ok || slices.Contains(d, h.Keyword) {
+		if !ok {
 			continue
 		}
-		e := Entry{Path: p, Line: i, Keyword: h.Keyword, Title: h.Title, Tags: h.Tags}
+		tags = append(tags[:min(len(tags), h.Level-1)], h.Tags)
+		e := Entry{Path: p, Line: i, Keyword: h.Keyword, Title: h.Title, Priority: h.Priority, Tags: slices.Concat(tags...), Done: slices.Contains(d, h.Keyword)}
 		if i+1 < len(lines) {
 			if plan, ok := parsePlan(lines[i+1]); ok {
-				switch {
-				case plan.Deadline != nil:
-					e.Date, e.Deadline = plan.Deadline.Day.Format(time.DateOnly), true
-				case plan.Scheduled != nil:
-					e.Date = plan.Scheduled.Day.Format(time.DateOnly)
+				e.Date, e.Deadline = plan.Deadline, plan.Deadline != nil
+				if e.Date == nil {
+					e.Date = plan.Scheduled
 				}
 			}
 		}
-		if e.Keyword != "" || e.Date != "" {
+		if e.Keyword != "" || e.Date != nil || len(e.Tags) > 0 {
 			out = append(out, e)
 		}
 	}
 	return out
 }
 
-// show shows the agenda: what is overdue, due today, in the week ahead and
-// later, by date, and then the TODOs with no date.
-func show() {
-	var all []*Entry
+// all returns the entries of every file read, by file and line.
+func all() []*Entry {
+	var out []*Entry
 	for _, p := range slices.Sorted(maps.Keys(read)) {
 		for i := range read[p].entries {
-			all = append(all, &read[p].entries[i])
+			out = append(out, &read[p].entries[i])
 		}
 	}
-	slices.SortStableFunc(all, func(a, b *Entry) int { return strings.Compare(a.Date, b.Date) })
-	now := sdk.Now()
-	today, week := now.Format(time.DateOnly), now.AddDate(0, 0, 7).Format(time.DateOnly)
-	groups := []struct {
-		name string
-		in   func(e *Entry) bool
-	}{
-		{"Overdue", func(e *Entry) bool { return e.Date != "" && e.Date < today }},
-		{"Today", func(e *Entry) bool { return e.Date == today }},
-		{"This week", func(e *Entry) bool { return e.Date > today && e.Date <= week }},
-		{"Later", func(e *Entry) bool { return e.Date > week }},
-		{"No date", func(e *Entry) bool { return e.Date == "" }},
-	}
-	var lines []string
-	scan.shown = nil
-	for _, g := range groups {
-		var in []*Entry
-		for _, e := range all {
-			if g.in(e) {
-				in = append(in, e)
-			}
-		}
-		if len(in) == 0 {
-			continue
-		}
-		if len(lines) > 0 {
-			lines, scan.shown = append(lines, ""), append(scan.shown, nil)
-		}
-		lines, scan.shown = append(lines, g.name), append(scan.shown, nil)
-		for _, e := range in {
-			lines, scan.shown = append(lines, "  "+describe(e)), append(scan.shown, e)
-		}
-	}
-	if len(lines) == 0 {
-		lines = []string{"nothing to do"}
-	}
-	sdk.Do(api.Result{Show: &api.Panel{Title: "[agenda]", Text: strings.Join(lines, "\n"), Unnumbered: true, Keys: map[string]string{
-		"<CR>": "<Plug>(fude-org.agenda_open)",
-		"t":    "<Plug>(fude-org.agenda_todo)",
-		"r":    "<Plug>(fude-org.agenda)",
-	}}})
+	return out
 }
 
-// describe returns e as a line of the agenda.
-func describe(e *Entry) string {
-	var b strings.Builder
-	if e.Date != "" {
-		b.WriteString(e.Date + "  ")
-		if e.Deadline {
-			b.WriteString("due  ")
+// week shows what is overdue and not done, then each of the next seven
+// days with what is scheduled or due on it, a date that repeats on each
+// day it repeats to.
+func week() {
+	day := today()
+	var lines []string
+	var shown []*Entry
+	add := func(title string, es []*Entry, timed bool) {
+		lines, shown = append(lines, title), append(shown, nil)
+		for _, e := range es {
+			lines, shown = append(lines, "  "+describe(e, timed)), append(shown, e)
 		}
 	}
-	if e.Keyword != "" {
-		b.WriteString(e.Keyword + " ")
+	var overdue []*Entry
+	for _, e := range all() {
+		if !e.Done && e.Date != nil && e.Date.Day.Before(day) && !repeatsTo(*e.Date, day) {
+			overdue = append(overdue, e)
+		}
 	}
-	b.WriteString(e.Title + "  " + path.Base(e.Path))
-	return b.String()
+	if len(overdue) > 0 {
+		add("Overdue", overdue, false)
+	}
+	for n := range 7 {
+		d := day.AddDate(0, 0, n)
+		var on []*Entry
+		for _, e := range all() {
+			if !e.Done && e.Date != nil && (e.Date.Day.Equal(d) || repeatsTo(*e.Date, d)) {
+				on = append(on, e)
+			}
+		}
+		slices.SortStableFunc(on, func(a, b *Entry) int { return strings.Compare(a.Date.Time, b.Date.Time) })
+		add(d.Format("Mon 2006-01-02"), on, true)
+	}
+	panel("[agenda: week]", lines, shown)
+}
+
+// repeatsTo reports whether st repeats to the day d, after its own.
+func repeatsTo(st Stamp, d time.Time) bool {
+	n, unit, ok := interval(st.Repeat)
+	if !ok || n <= 0 {
+		return false
+	}
+	for st = st.add(n, unit); !st.Day.After(d); st = st.add(n, unit) {
+		if st.Day.Equal(d) {
+			return true
+		}
+	}
+	return false
+}
+
+// todos shows every heading with a TODO keyword that is not done, by
+// priority.
+func todos() {
+	var es []*Entry
+	for _, e := range all() {
+		if e.Keyword != "" && !e.Done {
+			es = append(es, e)
+		}
+	}
+	slices.SortStableFunc(es, func(a, b *Entry) int { return strings.Compare(cmp.Or(a.Priority, "Z"), cmp.Or(b.Priority, "Z")) })
+	var lines []string
+	for _, e := range es {
+		lines = append(lines, describe(e, false))
+	}
+	panel("[agenda: TODOs]", lines, es)
+}
+
+// tagged shows each heading whose tags match expr, as matches reads it.
+func tagged(expr string) {
+	var es []*Entry
+	var lines []string
+	for _, e := range all() {
+		if matches(e.Tags, expr) {
+			es, lines = append(es, e), append(lines, describe(e, false)+"  :"+strings.Join(e.Tags, ":")+":")
+		}
+	}
+	panel("[agenda: "+expr+"]", lines, es)
+}
+
+// matches reports whether tags match expr, as org matches tags: groups
+// separated by |, of which one must match, each of tags with + before one
+// it must have and - before one it must not, + when it has neither.
+func matches(tags []string, expr string) bool {
+	for _, group := range strings.Split(expr, "|") {
+		terms, ok := 0, true
+		for i := 0; i < len(group); {
+			sign := byte('+')
+			if group[i] == '+' || group[i] == '-' {
+				sign, i = group[i], i+1
+			}
+			j := i + strings.IndexAny(group[i:]+"+", "+-")
+			if name := strings.TrimSpace(group[i:j]); name != "" {
+				terms++
+				has := slices.ContainsFunc(tags, func(t string) bool { return strings.EqualFold(t, name) })
+				ok = ok && has == (sign == '+')
+			}
+			i = j
+		}
+		if ok && terms > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// panel shows lines in the agenda's window under title, shown being the
+// entry each line shows, nil for none.
+func panel(title string, lines []string, shown []*Entry) {
+	scan.shown = shown
+	if len(lines) == 0 {
+		lines = []string{"nothing to show"}
+	}
+	report(sdk.Do(api.Result{Show: &api.Panel{Title: title, Text: strings.Join(lines, "\n"), Unnumbered: true, Keys: map[string]string{
+		"<CR>": "<Plug>(fude-org.agenda_open)",
+		"t":    "<Plug>(fude-org.agenda_todo)",
+		"r":    "<Plug>(fude-org.agenda_again)",
+	}}}))
+}
+
+// describe returns e as a line of the agenda, with its time when timed or
+// else its date, and its file.
+func describe(e *Entry, timed bool) string {
+	var parts []string
+	switch {
+	case e.Date != nil && timed && e.Date.Time != "":
+		parts = append(parts, e.Date.Time)
+	case e.Date != nil && !timed:
+		parts = append(parts, e.Date.Day.Format(time.DateOnly))
+	}
+	if e.Deadline {
+		parts = append(parts, "due")
+	}
+	if e.Keyword != "" {
+		parts = append(parts, e.Keyword)
+	}
+	if e.Priority != "" {
+		parts = append(parts, "[#"+e.Priority+"]")
+	}
+	return strings.Join(append(parts, e.Title, " "+path.Base(e.Path)), " ")
 }
 
 // shownAt returns the entry the agenda shows on the line that holds pos.

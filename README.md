@@ -112,11 +112,17 @@ Anywhere:
 
 | Keys | Command | What it does |
 |---|---|---|
-| `<Leader>oa` | `:OrgAgenda` | shows what is overdue, due today, this week and later, then the TODOs with no date |
+| `<Leader>oa` | `:OrgAgenda [week\|todo\|tags MATCH]` | asks for an agenda view, or shows the one named: the week, every TODO, or the headings whose tags match |
 | `<Leader>oc` | `:OrgCapture [text]` | asks for a capture template and the text, or captures the text typed after it with the first template |
 
+The week shows what is overdue and not done, then each of the next seven
+days with what is scheduled or due on it, by time. A date that repeats
+shows on each day it repeats to. A tag match is org's: `work+urgent-home`
+needs work and urgent and not home, and `work|home` either. A heading has
+the tags of the headings it is under too.
+
 In the agenda, `<CR>` opens the heading on the cursor's line, `t` puts the
-next TODO keyword on it in its file, and `r` gathers the agenda again.
+next TODO keyword on it in its file, and `r` gathers the view again.
 
 A capture template is a line of the `templates` option: a key, a file in
 the directory, with `::*heading` after it to go under that heading or not,
@@ -148,9 +154,9 @@ Set them in the table's `options`, such as
 
 ## Not yet
 
-The agenda lists TODO headings, and headings with a `SCHEDULED:` or
-`DEADLINE:` date on the line after them. It has no week view, clocking,
-tags view or custom views. There are no tables, export or code blocks yet.
+Clocking, tables, column view, footnotes, sparse trees, narrowing, ID
+links, custom agenda views, export, code blocks, citations and
+attachments.
 
 ## Check
 

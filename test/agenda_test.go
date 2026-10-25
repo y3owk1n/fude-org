@@ -47,35 +47,67 @@ func settle(t *testing.T, p *plugintest.Plugin, res api.Result) api.Result {
 	return res
 }
 
-func TestAgenda(t *testing.T) {
-	day := func(days int) string { return time.Now().UTC().AddDate(0, 0, days).Format(time.DateOnly) }
+// views makes notes for the agenda's views to show, with dates from
+// today.
+func views(t *testing.T) *plugintest.Plugin {
+	t.Helper()
+	day := func(days int) string { return time.Now().AddDate(0, 0, days).Format("2006-01-02 Mon") }
 	p, _ := notes(t, map[string]string{
-		"a.org":      "* TODO Buy milk :home:\nSCHEDULED: <" + day(0) + " Sun>\n* DONE Old\n* Plain\n** TODO Call mom\n",
-		"sub/b.org":  "* Rent\nDEADLINE: <" + day(-2) + " Fri>\n* Trip\nSCHEDULED: <" + day(3) + " Wed>\n",
+		"a.org":      "* TODO Buy milk :home:\nSCHEDULED: <" + day(0) + ">\n* DONE Old\nSCHEDULED: <" + day(0) + ">\n* Errands :errand:\n** TODO [#A] Bank\n** TODO Call mom :home:\n",
+		"sub/b.org":  "* Rent\nDEADLINE: <" + day(-2) + ">\n* Meeting\nSCHEDULED: <" + day(1) + " 10:00>\n* Gym\nSCHEDULED: <" + day(-1) + " +2d>\n",
 		".git/c.org": "* TODO hidden\n",
 	})
-	res := settle(t, p, p.Command("OrgAgenda", "", "", 0))
+	return p
+}
+
+// lines runs :OrgAgenda with args and returns the lines it shows.
+func lines(t *testing.T, p *plugintest.Plugin, args string) []string {
+	t.Helper()
+	res := settle(t, p, p.Command("OrgAgenda", args, "", 0))
 	if res.Show == nil {
-		t.Fatalf("the agenda showed nothing, and asked for %+v", res)
+		t.Fatalf(":OrgAgenda %s showed nothing: %+v", args, res)
 	}
-	want := strings.Join([]string{
-		"Overdue",
-		"  " + day(-2) + "  due  Rent  b.org",
-		"",
-		"Today",
-		"  " + day(0) + "  TODO Buy milk  a.org",
-		"",
-		"This week",
-		"  " + day(3) + "  Trip  b.org",
-		"",
-		"No date",
-		"  TODO Call mom  a.org",
-	}, "\n")
-	if res.Show.Text != want {
-		t.Errorf("the agenda shows\n%s\nwant\n%s", res.Show.Text, want)
+	return strings.Split(res.Show.Text, "\n")
+}
+
+func TestAgendaWeek(t *testing.T) {
+	date := func(days int) string { return time.Now().AddDate(0, 0, days).Format(time.DateOnly) }
+	header := func(days int) string { return time.Now().AddDate(0, 0, days).Format("Mon 2006-01-02") }
+	got := lines(t, views(t), "")
+	want := []string{
+		"Overdue", "  " + date(-2) + " due Rent  b.org", "  " + date(-1) + " Gym  b.org",
+		header(0), "  TODO Buy milk  a.org",
+		header(1), "  Gym  b.org", "  10:00 Meeting  b.org",
+		header(2),
+		header(3), "  Gym  b.org",
+		header(4),
+		header(5), "  Gym  b.org",
+		header(6),
 	}
-	if res.Show.Keys["<CR>"] == "" || res.Show.Keys["t"] == "" {
-		t.Errorf("the agenda maps %v, want <CR> and t", res.Show.Keys)
+	if strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Errorf("the week shows\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+}
+
+func TestAgendaViews(t *testing.T) {
+	p := views(t)
+	today := time.Now().Format(time.DateOnly)
+	if got := strings.Join(lines(t, p, "todo"), "\n"); got != "TODO [#A] Bank  a.org\n"+today+" TODO Buy milk  a.org\nTODO Call mom  a.org" {
+		t.Errorf("the TODOs show\n%s", got)
+	}
+	// A heading has the tags of those it is under.
+	for match, want := range map[string]string{
+		"errand":        "Errands  a.org  :errand:\nTODO [#A] Bank  a.org  :errand:\nTODO Call mom  a.org  :errand:home:",
+		"home-errand":   today + " TODO Buy milk  a.org  :home:",
+		"errand+home|x": "TODO Call mom  a.org  :errand:home:",
+	} {
+		got := lines(t, p, "tags "+match)
+		if strings.Join(got, "\n") != want {
+			t.Errorf("tags %s show\n%s\nwant\n%s", match, strings.Join(got, "\n"), want)
+		}
+	}
+	if res := p.Command("OrgAgenda", "month", "", 0); res.Error == "" {
+		t.Error(":OrgAgenda month said nothing")
 	}
 }
 
