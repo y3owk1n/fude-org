@@ -1,7 +1,7 @@
 # Sourced by each tape in a hidden prelude, from the repo root inside its
-# oku environment, as `source demos/setup.sh <clip>`. It builds fude from
-# the checkout beside this repo and the plugin from this one, and gives
-# them a throwaway HOME under /tmp/fude-org-demo with the clip's org notes.
+# oku environment, as `source demos/setup.sh <clip>`. It builds the plugin
+# with the fude on PATH, and gives them a throwaway HOME under
+# /tmp/fude-org-demo with the clip's org notes.
 # A recording never touches your own config, state or notes.
 
 repo=$PWD
@@ -16,7 +16,8 @@ pin=$(sed -n 's/.*Commit: *"\([0-9a-f]*\)".*/\1/p' $repo/main.go)
 chmod -R u+rwX $root 2>/dev/null
 rm -rf $root
 mkdir -p $root/bin $root/run $root/.config/fude $root/.local/share/fude $root/org/work
-(cd $repo/../fude && go build -o $root/bin/fude ./cmd/fude) || return 1
+fude=$(command -v fude) || { echo "fude is not on PATH" >&2; return 1; }
+ln -s $fude $root/bin/fude
 $root/bin/fude plugin build $repo >/dev/null || return 1
 ln -s $(command -v git) $root/bin/git
 ln -s $(command -v tree-sitter) $root/bin/tree-sitter

@@ -266,9 +266,10 @@ Each clip has a tape in `demos/`. Record one with
 [VHS](https://github.com/charmbracelet/vhs) from the repo root, with VHS,
 ttyd and ffmpeg on PATH. `vhs demos/org.tape` writes `demos/org.gif`, and
 the `tables`, `code`, `time` and `notes` tapes write the other clips.
-`demos/setup.sh` runs hidden first. It builds fude from `../fude` and this plugin, and gives
-them a throwaway HOME under `/tmp/fude-org-demo` with the clip's notes,
-dated from today, so a recording never touches your config or your notes.
+`demos/setup.sh` runs hidden first. It builds this plugin with the fude on
+PATH, and gives them a throwaway HOME under `/tmp/fude-org-demo` with the
+clip's notes, dated from today, so a recording never touches your config
+or your notes.
 The first recording builds the org grammar out of view, in a tmux session,
 which needs git, tree-sitter and the network. Later recordings reuse it
 from `demos/out/`.
