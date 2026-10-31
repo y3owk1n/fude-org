@@ -1,0 +1,6 @@
+# The manifest. fude plugin build writes it into the plugin, and
+# fude plugin add grants what it asks for.
+name = "fude-org"
+capabilities = ["buffer.read", "buffer.write", "ui", "fs.read", "fs.write", "process", "keys", "grammar"]
+programs = ["open", "pandoc", "sh", "python3", "node"]
+hosts = []

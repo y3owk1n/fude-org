@@ -41,8 +41,9 @@ paths = ["~/org"]
 - `keys` lets `<Tab>` and `<S-Tab>` run fude's fold cycling. A guest of a
   shared session may not use a plugin granted `keys`.
 
-Keep the file named `fude-org.wasm`. Its options and the agenda's keys are
-named after it.
+Its options and the agenda's keys are named `fude-org`, the name its
+`fude.toml` gives. fude 0.3.2 and older name them after the file, so keep
+the file named `fude-org.wasm` there.
 
 ## Use
 
