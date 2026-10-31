@@ -6,26 +6,29 @@ folder, with a capture into its inbox.
 
 ![fude-org cycling folds, marking a TODO done, moving a subtree, capturing and showing the agenda](demos/org.gif)
 
-## Build
-
-```sh
-oku sync && oku allow   # Go, TinyGo and binaryen, as fude pins them
-fude plugin build       # writes fude-org.wasm
-```
-
-It needs fude v0.3.1 or later.
-
 ## Install
 
-Add this table to fude's `config.toml`:
+```sh
+fude plugin add github.com/y3owk1n/fude-org
+```
+
+It needs fude 0.4.0 or later. fude prints what the plugin asks for, and
+once you answer y, installs it and adds this table to `config.toml`:
 
 ```toml
 [[plugin]]
-path = "/path/to/fude-org/fude-org.wasm"
+repo = "github.com/y3owk1n/fude-org"
 capabilities = ["buffer.read", "buffer.write", "ui", "fs.read", "fs.write", "process", "keys", "grammar"]
 programs = ["open", "pandoc", "sh", "python3", "node"]
+```
+
+Add the folder of your org files to that table:
+
+```toml
 paths = ["~/org"]
 ```
+
+What each grant is for:
 
 - `grammar` lets fude build the org grammar from
   [nvim-orgmode/tree-sitter-org](https://github.com/nvim-orgmode/tree-sitter-org).
@@ -34,16 +37,36 @@ paths = ["~/org"]
   `:grammar install org` builds it.
 - `paths` is the folder of your org files, which the agenda reads and
   capture writes to.
-- `process` and `programs` let a web link open with `open`, or with
-  `xdg-open` on Linux, set as the `opener` option too, export run
-  pandoc, and source blocks run their languages. Leave out what you do
-  not use.
+- `process` and `programs` let a web link open with `open`, export run
+  pandoc, and source blocks run their languages. On Linux, add
+  `xdg-open` to `programs` and set it as the `opener` option.
 - `keys` lets `<Tab>` and `<S-Tab>` run fude's fold cycling. A guest of a
   shared session may not use a plugin granted `keys`.
 
-Its options and the agenda's keys are named `fude-org`, the name its
-`fude.toml` gives. fude 0.3.2 and older name them after the file, so keep
-the file named `fude-org.wasm` there.
+Leave out of the table what you do not use, and fude denies it to the
+plugin. Its options and the agenda's keys are named `fude-org`.
+
+- `:plugin update fude-org` updates it to its newest release.
+- `plugins.lock`, beside `config.toml`, pins the commit, so keep it with
+  your config.
+
+## Build from source
+
+```sh
+oku sync && oku allow   # Go, TinyGo and binaryen, as fude pins them
+fude plugin build       # writes fude-org.wasm
+```
+
+To run your build, point the table at the folder in place of `repo`.
+`:plugin reload` builds it again after a change.
+
+```toml
+[[plugin]]
+path = "~/code/fude-org"
+```
+
+Pushing a tag `v*` runs the release workflow, which attaches the
+`fude-org.wasm` that `fude plugin add` installs.
 
 ## Use
 
